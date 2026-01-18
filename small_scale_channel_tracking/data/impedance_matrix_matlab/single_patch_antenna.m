@@ -19,8 +19,9 @@ p = createPatchAntenna_2GHz();
 f_check = linspace(1.95e9, 2.15e9, 21);
 mesh(p, 'MaxEdgeLength', 0.008); 
 close(gcf); % Close the mesh figure to keep the workspace clean
-fig_layout = figure('visible', 'off');
+% fig_layout = figure('visible', 'off');
 show(p);
+%%
 saveas(fig_layout, 'plot_antenna_layout/single_antenna_layout.png');
 close(fig_layout);
 
@@ -57,23 +58,3 @@ fprintf('Imaginary Part (Reactance): %.2f Ohm \n', imag(Z_at_resonance));
 fprintf('------------------------------------------------\n');
 
 
-%% Callable Function Section
-function p = createPatchAntenna_2GHz()
-    % createPatchAntenna returns a patchMicrostrip object optimized for targetFreq
-    % visit the website below to get the antenna config with certain parameters
-    % https://3g-aerial.biz/en/online-calculations/antenna-calculations/patch-antenna-online-calculator
-    targetFreq = 2.0625e9;
-    epsilonR = 4.4;
-    height = 0.0014; 
-    
-    % Object Construction
-    p = patchMicrostrip;
-    p.Length = 0.0344;    
-    p.Width = 0.0442;  
-    p.Height = height;
-    p.Substrate = dielectric('FR4');
-    p.Substrate.EpsilonR = epsilonR;
-    p.GroundPlaneLength = 0.0701;
-    p.GroundPlaneWidth = 0.0799;
-    p.FeedOffset = [0.0075 0];   % 0.0058
-end
