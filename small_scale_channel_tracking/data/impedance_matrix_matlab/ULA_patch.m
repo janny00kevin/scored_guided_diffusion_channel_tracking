@@ -26,15 +26,15 @@ ula.ElementSpacing = lambda / asf; % Set spacing
 
 margin = (p_element.GroundPlaneLength - p_element.Length) / 2;
 boardLen = (lambda/asf * (ula.NumElements-1) + p_element.Length/asf*2 + margin*2) / ula.NumElements;
-% ula.Element.Substrate.Length = boardLen;
-% ula.Element.GroundPlaneLength = boardLen; 
+ula.Element.Substrate.Length = boardLen;
+ula.Element.GroundPlaneLength = boardLen; 
 
 % Save Layout to verify spacing
 if ~exist('plot_antenna_layout', 'dir'), mkdir('plot_antenna_layout'); end
 fig = figure('visible', 'off');
 show(ula);
 title(['2x1 ULA Layout (Spacing = \lambda/' num2str(asf) ' = ' num2str(ula.ElementSpacing*1000, '%.1f') ' mm)']);
-saveas(fig, 'plot_antenna_layout/ula_2x1_layout.png');
+saveas(fig, 'plot_antenna_layout/ula_layout.png');
 close(fig);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
