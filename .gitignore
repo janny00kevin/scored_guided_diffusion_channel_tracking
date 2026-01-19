@@ -5,5 +5,8 @@ __pycache__
 .vscode/launch.json
 test.py
 *.m~
+plot_antenna_layout
+plot_S
+plot_Z
 
 *.mat
