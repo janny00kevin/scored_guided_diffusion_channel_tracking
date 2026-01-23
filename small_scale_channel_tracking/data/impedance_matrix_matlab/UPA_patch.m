@@ -1,5 +1,5 @@
 %% UPA_patch.m
-clear; clc;
+clear;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Configurations
@@ -8,11 +8,10 @@ n = 7;
 grid_size = [n n]; % [Rows, Columns] 
 
 % 1. Create the base element
-% Ensure createPatchAntenna_2GHz.m is in the same folder
-p_element = createPatchAntenna_2GHz();
+p_element = createPatchAntenna_39GHz();
 
 % 2. Define Target Frequency and Physics
-targetFreq = 2.0625e9;
+targetFreq = 38.75e9;
 c = 299792458;
 lambda = c / targetFreq;
 fprintf('Antenna Spacing Factor: %d\n', asf);
@@ -48,8 +47,8 @@ title(['UPA Layout (' num2str(grid_size(1)) 'x' num2str(grid_size(2)) ...
        ', Spacing = \lambda/' num2str(asf) ' = ' ...
        num2str(upa.RowSpacing*1000, '%.1f') ' mm)']);
 view(45, 45); % Angled view to see the planar structure better
-filename = sprintf('plot_antenna_layout/%dx%dUPA_layout_spacing%d.png', ...
-                   grid_size(1), grid_size(2), asf);
+filename = sprintf('plot_antenna_layout/%dx%dUPA_layout_spacing%d_%.0fGHz.png', ...
+                   grid_size(1), grid_size(2), asf, targetFreq/1e9);
 saveas(fig, filename);
 close(fig);
 
