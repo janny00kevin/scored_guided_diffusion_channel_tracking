@@ -5,7 +5,7 @@ addpath('TS38901');
 rng(0);
 
 % --- 1. Configuration ---
-f_c = 28;
+f_c = 28;  % 2.0625, 28, or 38.75 GHz
 nTxxy = [7 7];
 nRxxy = [2 2];
 num_samples = 3000;
@@ -36,4 +36,6 @@ parfor i = 1:num_samples
     H_samples(i,:,:) = single(H{1});
 end
 
-save('channel_data_28GHz_7x7Tx_2x2Rx_3000samples.mat','H_samples','-v7.3');
+filename = sprintf('channel_data_%.0fGHz_%dx%dTx_%dx%dRx_%dsamples.mat', ...
+    f_c, nTxxy(1), nTxxy(2), nRxxy(1), nRxxy(2), num_samples);
+save(filename,'H_samples','-v7.3');
