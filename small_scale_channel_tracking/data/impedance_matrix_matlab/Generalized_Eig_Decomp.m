@@ -2,9 +2,9 @@
 clear; clc;
 
 % --- 1. Configuration (Match your saved file) ---
-targetFreq_GHz = 2;  % Note: 2, 28, or 39
+targetFreq_GHz = 39;  % Note: 2, 28, or 39, this file doesn't need the accurate freq
 asf = 2;             % Antenna spacing factor
-n = 7;
+n = 2;
 grid_size = [n n]; % [Rows, Columns] 
 
 % --- 2. Load the Data ---
