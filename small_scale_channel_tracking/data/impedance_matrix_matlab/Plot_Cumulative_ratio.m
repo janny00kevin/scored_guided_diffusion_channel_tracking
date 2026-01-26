@@ -91,11 +91,12 @@ xlabel('Number of Eigenvalues');
 ylabel('Cumulative Energy Ratio');
 title('Cumulative Energy (Magnitude Sorted)');
 legend('Location', 'southeast');
-xlim([1, 49]);
+xlim([1, grid_size(1)*grid_size(2)]); % Adjusted for general grid size
 ylim([0, 1.05]);
 
 % --- Save Figure ---
-save_path = fullfile(input_folder, 'Energy_Comparison_Magnitude_Sorted.png');
+file_name = sprintf('%dx%d_Energy_Comparison_Magnitude_Sorted.png', grid_size(1), grid_size(2));
+save_path = fullfile(input_folder, file_name);
 saveas(fig, save_path);
 close(fig);
 fprintf('Saved: %s\n', save_path);
