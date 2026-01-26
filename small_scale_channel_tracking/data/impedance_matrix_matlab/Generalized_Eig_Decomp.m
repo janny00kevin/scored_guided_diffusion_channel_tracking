@@ -2,7 +2,7 @@
 clear; clc;
 
 % --- 1. Configuration (Match your saved file) ---
-targetFreq_GHz = 39;  % Note: '%.0f' in your save command rounded 2.0625 to 2
+targetFreq_GHz = 2;  % Note: 2, 28, or 39
 asf = 2;             % Antenna spacing factor
 n = 7;
 grid_size = [n n]; % [Rows, Columns] 
@@ -39,8 +39,10 @@ disp('Computing Generalized Eigenvalues [eig(R_T, X_T)]...');
 
 % Extract diagonal eigenvalues for easier viewing
 lambda_values = diag(Lambda_T_Matrix);
-[lambda_sorted, sort_idx] = sort(lambda_values, 'descend');
-% 3. CRITICAL: Reorder the Eigenvectors (U_T) using the same index
+% 1. Get the indices based on MAGNITUDE (Absolute Value)
+[~, sort_idx] = sort(abs(lambda_values), 'descend');
+lambda_sorted = lambda_values(sort_idx);
+% 2. CRITICAL: Reorder the Eigenvectors (U_T) using the same index
 U_T_sorted = U_T(:, sort_idx);
 
 % --- 5. Display Results ---
