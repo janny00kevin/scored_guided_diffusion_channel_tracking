@@ -127,6 +127,11 @@ def main():
     
     print(f"Truncation: Tx Rank {R_T}/{N_T}, Rx Rank {R_R}/{N_R}")
 
+    # Factoring C_T_sqrt approx U_T_trunc @ Gamma_T_sqrt @ U_T_trunc^H
+    # Projection: Gamma_sqrt = U^H @ C_sqrt @ U
+    Gamma_T_sqrt = U_T_trunc.conj().T @ C_T_sqrt @ U_T_trunc
+    Gamma_R_sqrt = U_R_trunc.conj().T @ C_R_sqrt @ U_R_trunc
+
     # 5. Define Test Vector s (Modal Domain Excitation)
     # Equation: s can equal [1 0 ... 0]^T
     s = np.zeros((R_T, 1))
@@ -156,10 +161,15 @@ def main():
         # Received spatial signal
         y_full = H_sys @ x
         
-        # --- B. Modal Channel (Approximation) ---
-        # 1. Compute the effective modal channel matrix H_tilde_c
-        # H_tilde_c = U_{R,rR}^H * H_sys * U_{T,rT}
-        H_tilde_c = U_R_trunc.conj().T @ H_sys @ U_T_trunc
+        # --- B. Modal Channel Construction (Approximation) ---
+        # H_c = U_R @ Gamma_R @ U_R^H @ H_spatial @ U_T @ Gamma_T @ U_T^H
+        # This represents the channel confined to the truncated modal subspace
+        H_c = (U_R_trunc @ Gamma_R_sqrt @ U_R_trunc.conj().T @ 
+               H_spatial @ 
+               U_T_trunc @ Gamma_T_sqrt @ U_T_trunc.conj().T)
+        
+        # H_tilde_c = U_R^H @ H_c @ U_T
+        H_tilde_c = U_R_trunc.conj().T @ H_c @ U_T_trunc
         
         # 2. Compute received modal signal
         # Equation: y_modal = U_{R,rR} * H_tilde_c * s
