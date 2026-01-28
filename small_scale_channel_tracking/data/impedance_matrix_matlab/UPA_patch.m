@@ -4,14 +4,14 @@ clear;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Configurations
 asf = 2;  % antenna_space = lambda / asf (e.g., lambda/2)
-n = 7;
+n = 2;
 grid_size = [n n]; % [Rows, Columns] 
 
 % 1. Create the base element
-p_element = createPatchAntenna_39GHz();
+p_element = createPatchAntenna_2GHz();
 
 % 2. Define Target Frequency and Physics
-targetFreq = 38.75e9;
+targetFreq = 2.0625e9;
 c = 299792458;
 lambda = c / targetFreq;
 fprintf('Antenna Spacing Factor: %d\n', asf);
