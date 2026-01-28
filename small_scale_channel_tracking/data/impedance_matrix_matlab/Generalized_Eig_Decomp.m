@@ -4,7 +4,7 @@ clear; clc;
 % --- 1. Configuration (Match your saved file) ---
 targetFreq_GHz = 39;  % Note: 2, 28, or 39, this file doesn't need the accurate freq
 asf = 2;             % Antenna spacing factor
-n = 2;
+n = 7;
 grid_size = [n n]; % [Rows, Columns] 
 
 % --- 2. Load the Data ---
@@ -44,6 +44,10 @@ lambda_values = diag(Lambda_T_Matrix);
 lambda_sorted = lambda_values(sort_idx);
 % 2. CRITICAL: Reorder the Eigenvectors (U_T) using the same index
 U_T_sorted = U_T(:, sort_idx);
+% normalize each eigenvector to have unit norm
+for i = 1:size(U_T_sorted, 2)
+    U_T_sorted(:, i) = U_T_sorted(:, i) / norm(U_T_sorted(:, i));
+end
 
 % --- 5. Display Results ---
 fprintf('\nGeneralized Eigenvalues (Lambda_T):\n');

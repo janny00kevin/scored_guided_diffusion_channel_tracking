@@ -8,7 +8,10 @@ import h5py
 # 1. Configuration
 # ==========================================
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-FREQ_GHZ = 39
+FREQ_GHZ = 28  # 2, 28, or 39 GHz
+# Rank Truncation (from your prompt)
+R_T = 27  # 43, 27, or 6 for Tx
+
 ASF = 2  # Antenna Spacing Factor
 
 # Dimensions
@@ -17,8 +20,6 @@ RX_DIM = [2, 2]
 N_T = TX_DIM[0] * TX_DIM[1] # 49
 N_R = RX_DIM[0] * RX_DIM[1] # 4
 
-# Rank Truncation (from your prompt)
-R_T = 6
 R_R = 4
 
 # Characteristic Impedance
@@ -120,17 +121,12 @@ def main():
     U_R_full = load_sorted_eigenvectors(EIGEN_FILE_RX) # 4x4
     
     # 4. Truncate Eigenvectors (Modal Subspaces)
-    # U_{T, rT} (49 x 6)
+    # U_{T, rT} (49 x r_T)
     U_T_trunc = U_T_full[:, :R_T]
-    # U_{R, rR} (4 x 4)
+    # U_{R, rR} (4 x r_R)
     U_R_trunc = U_R_full[:, :R_R]
     
     print(f"Truncation: Tx Rank {R_T}/{N_T}, Rx Rank {R_R}/{N_R}")
-
-    # Factoring C_T_sqrt approx U_T_trunc @ Gamma_T_sqrt @ U_T_trunc^H
-    # Projection: Gamma_sqrt = U^H @ C_sqrt @ U
-    Gamma_T_sqrt = U_T_trunc.conj().T @ C_T_sqrt @ U_T_trunc
-    Gamma_R_sqrt = U_R_trunc.conj().T @ C_R_sqrt @ U_R_trunc
 
     # 5. Define Test Vector s (Modal Domain Excitation)
     # Equation: s can equal [1 0 ... 0]^T
@@ -156,42 +152,25 @@ def main():
         # The physical voltages account for coupling at both ends.
         
         # Effective System Channel H_sys
-        H_sys = C_R_sqrt @ H_spatial @ C_T_sqrt
+        H_c = C_R_sqrt @ H_spatial @ C_T_sqrt
         
         # Received spatial signal
-        y_full = H_sys @ x
+        y_full = H_c @ x
         
-        # --- B. Modal Channel Construction (Approximation) ---
-        # H_c = U_R @ Gamma_R @ U_R^H @ H_spatial @ U_T @ Gamma_T @ U_T^H
-        # This represents the channel confined to the truncated modal subspace
-        H_c = (U_R_trunc @ Gamma_R_sqrt @ U_R_trunc.conj().T @ 
-               H_spatial @ 
-               U_T_trunc @ Gamma_T_sqrt @ U_T_trunc.conj().T)
-        
+        # --- B. Modal Channel Construction ---
         # H_tilde_c = U_R^H @ H_c @ U_T
-        H_tilde_c = U_R_trunc.conj().T @ H_c @ U_T_trunc
+        H_tilde_c = U_R_trunc.conj().T @ H_c @ U_T_trunc 
         
         # 2. Compute received modal signal
         # Equation: y_modal = U_{R,rR} * H_tilde_c * s
-        # Wait, strictly speaking y_modal in the figure is defined as:
-        # y_modal = U_{R,rR} * H_tilde_c * s
-        # However, looking at the error equation: || U^H y_full - y_modal ||
-        # If y_modal = H_tilde_c * s (purely modal domain vector, size rR x 1)
-        # Then U^H * y_full (size rR x 1) matches dimensions.
-        
-        # Let's align exactly with the error equation image:
-        # y_modal in the text says "in C^{rR}", which implies it's the coefficient vector.
-        # So y_modal = H_tilde_c * s
-        y_modal = H_tilde_c @ s
+        y_modal = U_R_trunc @ H_tilde_c @ s
         
         # --- C. Compute Normalized Error ---
-        # Numerator: || U_{R,rR}^H * y_full - y_modal ||_2
-        # Denominator: || U_{R,rR}^H * y_full ||_2
+        # Numerator: || y_full - y_modal ||_2
+        # Denominator: || y_full ||_2
         
-        projected_y_full = U_R_trunc.conj().T @ y_full
-        
-        numerator = norm(projected_y_full - y_modal, 2)
-        denominator = norm(projected_y_full, 2)
+        numerator = norm(y_full - y_modal, 2)
+        denominator = norm(y_full, 2)
         
         if denominator < 1e-12:
             current_error = 0.0
@@ -209,9 +188,9 @@ def main():
     print(f"Tx Array:  {TX_DIM} (Rank {R_T} used)")
     print(f"Rx Array:  {RX_DIM} (Rank {R_R} used)")
     print("-" * 40)
-    print(f"Mean Normalized Error: {mean_error:.6f}")
-    print(f"Min Error: {np.min(error_list):.6f}")
-    print(f"Max Error: {np.max(error_list):.6f}")
+    print(f"Mean Normalized Error: {mean_error:.3f}")
+    print(f"Min Error: {np.min(error_list):.3f}")
+    print(f"Max Error: {np.max(error_list):.3e}")
     print("="*40)
 
 if __name__ == "__main__":
