@@ -11,3 +11,4 @@ plot_Z
 # eigen_result
 
 *.mat
+tmp.py
