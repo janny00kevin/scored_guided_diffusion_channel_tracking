@@ -8,9 +8,20 @@ import h5py
 # 1. Configuration
 # ==========================================
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-FREQ_GHZ = 28  # 2, 28, or 39 GHz
-# Rank Truncation (from your prompt)
-R_T = 27  # 43, 27, or 6 for Tx
+MODE = 1  # 1: 2.0625, 2: 28, 3: 38.75 GHz
+
+if MODE == 1:
+    FREQ_GHZ = 2
+    R_T = 49
+elif MODE == 2:
+    FREQ_GHZ = 28
+    R_T = 49
+elif MODE == 3:
+    FREQ_GHZ = 39
+    R_T = 49
+# FREQ_GHZ = 28  # 2, 28, or 39 GHz
+# # Rank Truncation (from your prompt)
+# R_T = 27  # 43, 27, or 6 for Tx
 
 ASF = 2  # Antenna Spacing Factor
 
@@ -91,6 +102,7 @@ def load_sorted_eigenvectors(eigen_path):
 # ==========================================
 def main():
     print(f"--- Starting Modal Domain Validation ({FREQ_GHZ} GHz) ---")
+    np.random.seed(0)
     
     # 1. Load Channel Data
     # Shape is (3000, N_Rx, N_Tx)
@@ -106,7 +118,7 @@ def main():
     num_samples = H_samples.shape[0]
     print(f"Loaded {num_samples} samples. Shape: {H_samples.shape}")
 
-    # 2. Compute Coupling Matrices (C_T, C_R)
+    # 2. Compute the TRUE Coupling Matrices (C_T, C_R)
     print("Computing Coupling Matrices...")
     C_T = calculate_coupling_matrix(Z_FILE_TX, Z0)
     C_R = calculate_coupling_matrix(Z_FILE_RX, Z0)
@@ -128,14 +140,33 @@ def main():
     
     print(f"Truncation: Tx Rank {R_T}/{N_T}, Rx Rank {R_R}/{N_R}")
 
-    # 5. Define Test Vector s (Modal Domain Excitation)
-    # Equation: s can equal [1 0 ... 0]^T
-    s = np.zeros((R_T, 1))
-    s[0, 0] = 1 
+    # # 5. Define Test Vector x (Port Domain Excitation)
+    # # Testing random physical antennas (e_k) over 3000 snapshots
+    # x = np.zeros((num_samples, N_T, 1))
+    # # Randomly select a PHYSICAL ANTENNA index (0 to 48) for each sample
+    # random_ant_indices = np.random.randint(0, N_T, size=num_samples)
+    # # Set the corresponding element to 1
+    # x[np.arange(num_samples), random_ant_indices, 0] = 1.0
     
-    # Compute Excitation Vector x (Spatial Domain)
-    # Equation: x = U_{T, rT} * s
-    x = U_T_trunc @ s
+    # # Compute Modal Input Vector s_T (Projection)
+    # # We project the physical excitation onto the limited modal subspace
+    # # Equation: s_T = U_T^H * x
+    # # Dimensions: (1, R_T, 49) @ (3000, 49, 1) -> (3000, R_T, 1)
+    # s_T = U_T_trunc.conj().T[None, :, :] @ x
+
+
+
+
+    s_T = (np.random.randn(num_samples, R_T, 1) + 1j * np.random.randn(num_samples, R_T, 1)) / np.sqrt(2)
+    # s_T = np.zeros((num_samples, R_T, 1))
+    # random_ant_indices = np.random.randint(0, R_T, size=num_samples)
+    # s_T[np.arange(num_samples), random_ant_indices, 0] = 1.0
+    
+    # 2. Map to Port Domain
+    # This creates the physical port voltages corresponding to that beam.
+    # x = U_T_trunc * s_T
+    # Broadcasting: (1, 49, R_T) @ (3000, R_T, 1) -> (3000, 49, 1)
+    x = U_T_trunc[None, :, :] @ s_T
     
     # 6. Loop over samples
     error_list = []
@@ -155,7 +186,7 @@ def main():
         H_c = C_R_sqrt @ H_spatial @ C_T_sqrt
         
         # Received spatial signal
-        y_full = H_c @ x
+        y_full = H_c @ x[i, :, :]
         
         # --- B. Modal Channel Construction ---
         # H_tilde_c = U_R^H @ H_c @ U_T
@@ -163,7 +194,7 @@ def main():
         
         # 2. Compute received modal signal
         # Equation: y_modal = U_{R,rR} * H_tilde_c * s
-        y_modal = U_R_trunc @ H_tilde_c @ s
+        y_modal = U_R_trunc @ H_tilde_c @ s_T[i, :, :]
         
         # --- C. Compute Normalized Error ---
         # Numerator: || y_full - y_modal ||_2
@@ -188,9 +219,9 @@ def main():
     print(f"Tx Array:  {TX_DIM} (Rank {R_T} used)")
     print(f"Rx Array:  {RX_DIM} (Rank {R_R} used)")
     print("-" * 40)
-    print(f"Mean Normalized Error: {mean_error:.3f}")
+    print(f"Mean Normalized Error: {mean_error:.6f}")
     print(f"Min Error: {np.min(error_list):.3f}")
-    print(f"Max Error: {np.max(error_list):.3e}")
+    print(f"Max Error: {np.max(error_list):.3f}")
     print("="*40)
 
 if __name__ == "__main__":
