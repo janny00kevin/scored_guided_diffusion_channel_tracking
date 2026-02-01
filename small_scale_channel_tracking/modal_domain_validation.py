@@ -8,17 +8,17 @@ import h5py
 # 1. Configuration
 # ==========================================
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-MODE = 3  # 1: 2.0625, 2: 28, 3: 38.75 GHz
+MODE = 1  # 1: 2.0625, 2: 28, 3: 38.75 GHz
 
 if MODE == 1:
     FREQ_GHZ = 2
-    R_T = 43
+    R_T = 49
 elif MODE == 2:
     FREQ_GHZ = 28
-    R_T = 27
+    R_T = 49
 elif MODE == 3:
     FREQ_GHZ = 39
-    R_T = 6
+    R_T = 49
 # FREQ_GHZ = 28  # 2, 28, or 39 GHz
 # # Rank Truncation (from your prompt)
 # R_T = 27  # 43, 27, or 6 for Tx
