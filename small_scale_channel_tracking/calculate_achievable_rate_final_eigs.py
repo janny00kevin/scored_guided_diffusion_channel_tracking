@@ -149,7 +149,7 @@ def main():
     # 4. Plotting
     plt.figure(figsize=(8, 6))
     plt.plot(SNR_dB_Range, rate_coupling_avg, 'b-o', label=f'Full Coupling Aware ($N_T={N_T}$)', linewidth=2)
-    plt.plot(SNR_dB_Range, rate_modal_avg, 'r--s', label=f'Modal Domain (with last $R_T={R_T}$ eigenvectors)', linewidth=2)
+    plt.plot(SNR_dB_Range, rate_modal_avg, 'r--s', label=f'Modal Domain (with last $r_T={R_T}$ eigenvectors)', linewidth=2)
     
     plt.title(f'Achievable Rate vs SNR ({FREQ_GHZ} GHz)\nTx: {TX_DIM}, Rx: {RX_DIM}')
     plt.xlabel('SNR [dB]')

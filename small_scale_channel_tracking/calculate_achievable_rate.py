@@ -15,7 +15,7 @@ MODE = 3  # 1: 2.0625, 2: 28, 3: 38.75 GHz
 
 if MODE == 1:
     FREQ_GHZ = 2
-    R_T = 6
+    R_T = 43
 elif MODE == 2:
     FREQ_GHZ = 28
     R_T = 27
@@ -149,7 +149,7 @@ def main():
     # 4. Plotting
     plt.figure(figsize=(8, 6))
     plt.plot(SNR_dB_Range, rate_coupling_avg, 'b-o', label=f'Full Coupling Aware ($N_T={N_T}$)', linewidth=2)
-    plt.plot(SNR_dB_Range, rate_modal_avg, 'r--s', label=f'Modal Domain ($R_T={R_T}$)', linewidth=2)
+    plt.plot(SNR_dB_Range, rate_modal_avg, 'r--s', label=f'Modal Domain ($r_T={R_T}$)', linewidth=2)
     
     plt.title(f'Achievable Rate vs SNR ({FREQ_GHZ} GHz)\nTx: {TX_DIM}, Rx: {RX_DIM}')
     plt.xlabel('SNR [dB]')
