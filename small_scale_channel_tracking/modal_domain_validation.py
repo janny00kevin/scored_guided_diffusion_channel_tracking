@@ -8,17 +8,17 @@ import h5py
 # 1. Configuration
 # ==========================================
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-MODE = 1  # 1: 2.0625, 2: 28, 3: 38.75 GHz
+MODE = 3  # 1: 2.0625, 2: 28, 3: 38.75 GHz
 
 if MODE == 1:
     FREQ_GHZ = 2
-    R_T = 49
+    R_T = 43
 elif MODE == 2:
     FREQ_GHZ = 28
-    R_T = 49
+    R_T = 27
 elif MODE == 3:
     FREQ_GHZ = 39
-    R_T = 49
+    R_T = 6
 # FREQ_GHZ = 28  # 2, 28, or 39 GHz
 # # Rank Truncation (from your prompt)
 # R_T = 27  # 43, 27, or 6 for Tx
@@ -134,39 +134,40 @@ def main():
     
     # 4. Truncate Eigenvectors (Modal Subspaces)
     # U_{T, rT} (49 x r_T)
-    U_T_trunc = U_T_full[:, :R_T]
+    U_T_trunc = U_T_full[:, -R_T:]
     # U_{R, rR} (4 x r_R)
-    U_R_trunc = U_R_full[:, :R_R]
+    U_R_trunc = U_R_full[:, -R_R:]
     
     print(f"Truncation: Tx Rank {R_T}/{N_T}, Rx Rank {R_R}/{N_R}")
 
-    # # 5. Define Test Vector x (Port Domain Excitation)
-    # # Testing random physical antennas (e_k) over 3000 snapshots
-    # x = np.zeros((num_samples, N_T, 1))
-    # # Randomly select a PHYSICAL ANTENNA index (0 to 48) for each sample
-    # random_ant_indices = np.random.randint(0, N_T, size=num_samples)
-    # # Set the corresponding element to 1
-    # x[np.arange(num_samples), random_ant_indices, 0] = 1.0
+    # 5. Define Test Vector x (Port Domain Excitation)
+    # Testing random physical antennas (e_k) over 3000 snapshots
+    x = np.zeros((num_samples, N_T, 1))
+    # Randomly select a PHYSICAL ANTENNA index (0 to 48) for each sample
+    random_ant_indices = np.random.randint(0, N_T, size=num_samples)
+    # random_ant_indices = np.ones(num_samples, dtype=int) * 39
+    # Set the corresponding element to 1
+    x[np.arange(num_samples), random_ant_indices, 0] = 1.0
     
-    # # Compute Modal Input Vector s_T (Projection)
-    # # We project the physical excitation onto the limited modal subspace
-    # # Equation: s_T = U_T^H * x
-    # # Dimensions: (1, R_T, 49) @ (3000, 49, 1) -> (3000, R_T, 1)
-    # s_T = U_T_trunc.conj().T[None, :, :] @ x
+    # Compute Modal Input Vector s_T (Projection)
+    # We project the physical excitation onto the limited modal subspace
+    # Equation: s_T = U_T^H * x
+    # Dimensions: (1, R_T, 49) @ (3000, 49, 1) -> (3000, R_T, 1)
+    s_T = U_T_trunc.conj().T[None, :, :] @ x
 
 
 
 
-    s_T = (np.random.randn(num_samples, R_T, 1) + 1j * np.random.randn(num_samples, R_T, 1)) / np.sqrt(2)
-    # s_T = np.zeros((num_samples, R_T, 1))
-    # random_ant_indices = np.random.randint(0, R_T, size=num_samples)
-    # s_T[np.arange(num_samples), random_ant_indices, 0] = 1.0
+    # s_T = (np.random.randn(num_samples, R_T, 1) + 1j * np.random.randn(num_samples, R_T, 1)) / np.sqrt(2)
+    # # s_T = np.zeros((num_samples, R_T, 1))
+    # # random_ant_indices = np.random.randint(0, R_T, size=num_samples)
+    # # s_T[np.arange(num_samples), random_ant_indices, 0] = 1.0
     
-    # 2. Map to Port Domain
-    # This creates the physical port voltages corresponding to that beam.
-    # x = U_T_trunc * s_T
-    # Broadcasting: (1, 49, R_T) @ (3000, R_T, 1) -> (3000, 49, 1)
-    x = U_T_trunc[None, :, :] @ s_T
+    # # 2. Map to Port Domain
+    # # This creates the physical port voltages corresponding to that beam.
+    # # x = U_T_trunc * s_T
+    # # Broadcasting: (1, 49, R_T) @ (3000, R_T, 1) -> (3000, 49, 1)
+    # x = U_T_trunc[None, :, :] @ s_T
     
     # 6. Loop over samples
     error_list = []
