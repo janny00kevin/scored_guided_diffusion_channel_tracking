@@ -6,6 +6,7 @@ targetFreq_GHz = 39;  % Note: 2, 28, or 39, this file doesn't need the accurate 
 asf = 2;             % Antenna spacing factor
 n = 7;
 grid_size = [n n]; % [Rows, Columns] 
+GEVD_type = 'XR'; % 'RX' for \R\U = \X\U\Lambda, 'XR' for \X\U = \R\U\Lambda
 
 % --- 2. Load the Data ---
 filename = sprintf('Z_results/%dx%d_UPA_%.0fGHz_spacing%d_Z.mat', ...
@@ -35,12 +36,22 @@ fprintf('X_T (Reactance):  %dx%d\n', size(X_T));
 % Here: A = R_T, B = X_T
 
 disp('Computing Generalized Eigenvalues [eig(R_T, X_T)]...');
-[U_T, Lambda_T_Matrix] = eig(R_T, X_T);
+if strcmp(GEVD_type, 'RX')
+    fprintf('Using GEVD Type: R*U = X*U*Lambda\n');
+    [U_T, Lambda_T_Matrix] = eig(R_T, X_T);
+elseif strcmp(GEVD_type, 'XR')
+    fprintf('Using GEVD Type: X*U = R*U*Lambda\n');
+    [U_T, Lambda_T_Matrix] = eig(X_T, R_T);
+end
 
 % Extract diagonal eigenvalues for easier viewing
 lambda_values = diag(Lambda_T_Matrix);
 % 1. Get the indices based on MAGNITUDE (Absolute Value)
-[~, sort_idx] = sort(abs(lambda_values), 'descend');
+if strcmp(GEVD_type, 'RX')
+    [~, sort_idx] = sort(abs(lambda_values), 'descend');
+elseif strcmp(GEVD_type, 'XR')
+    [~, sort_idx] = sort(abs(lambda_values), 'ascend');
+end
 lambda_sorted = lambda_values(sort_idx);
 % 2. CRITICAL: Reorder the Eigenvectors (U_T) using the same index
 U_T_sorted = U_T(:, sort_idx);
