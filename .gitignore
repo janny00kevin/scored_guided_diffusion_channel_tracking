@@ -12,3 +12,5 @@ plot_Z
 
 *.mat
 tmp.py
+tmp.m
+logs
