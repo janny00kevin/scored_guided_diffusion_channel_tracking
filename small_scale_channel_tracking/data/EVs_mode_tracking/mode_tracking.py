@@ -125,7 +125,10 @@ def main():
     # Formatting
     plt.xlabel('Frequency (GHz)', fontsize=14)
     plt.ylabel('Eigenvalue (X/R)', fontsize=14)
-    plt.title(f'Characteristic Eigenvalue Evolution (Signed)\n{grid_size[0]}x{grid_size[1]} UPA', fontsize=16)
+    plt.title(f'Characteristic Eigenvalue Evolution\n{grid_size[0]}x{grid_size[1]} UPA', fontsize=16)
+
+    main_ticks = [38.65, 38.70, 38.75, 38.80, 38.85]
+    plt.xticks(main_ticks)
     
     # Use SymLog (Symmetric Log) to see detail near 0 while handling large values
     plt.yscale('symlog', linthresh=1.0) 
@@ -135,7 +138,7 @@ def main():
     sm = plt.cm.ScalarMappable(cmap=cmap, norm=plt.Normalize(vmin=1, vmax=num_modes))
     sm.set_array([])
     cbar = plt.colorbar(sm)
-    cbar.set_label('Mode Index (Sorted @ Start)', rotation=270, labelpad=20)
+    cbar.set_label('Mode Index', rotation=270, labelpad=20)
 
     plt.tight_layout()
     
