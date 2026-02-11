@@ -1,5 +1,5 @@
 %% UPA_patch.m
-clear;
+% clear;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Configurations
@@ -11,7 +11,9 @@ grid_size = [n n]; % [Rows, Columns]
 p_element = createPatchAntenna_39GHz();
 
 % 2. Define Target Frequency and Physics
-targetFreq = 38.75e9;
+if ~exist('targetFreq', 'var')
+    error('No frequency provided.');
+end
 c = 299792458;
 lambda = c / targetFreq;
 fprintf('Antenna Spacing Factor: %d\n', asf);
@@ -47,8 +49,8 @@ title(['UPA Layout (' num2str(grid_size(1)) 'x' num2str(grid_size(2)) ...
        ', Spacing = \lambda/' num2str(asf) ' = ' ...
        num2str(upa.RowSpacing*1000, '%.1f') ' mm)']);
 view(45, 45); % Angled view to see the planar structure better
-filename = sprintf('plot_antenna_layout/%dx%dUPA_layout_spacing%d_%.0fGHz.png', ...
-                   grid_size(1), grid_size(2), asf, targetFreq/1e9);
+filename = sprintf('plot_antenna_layout/%dx%dUPA_layout_%.2fGHz.png', ...
+                   grid_size(1), grid_size(2), targetFreq/1e9);
 saveas(fig, filename);
 close(fig);
 
@@ -83,6 +85,6 @@ fprintf('Self Impedance (Z11):   %.2f %+.2fi Ohm\n', real(Z11), imag(Z11));
 fprintf('Mutual Impedance (Z12): %.2f %+.2fi Ohm\n', real(Z12), imag(Z12));
 
 % Save with updated filename format
-filename = sprintf('Z_results/%dx%d_UPA_%.0fGHz_spacing%d_Z.mat', ...
-    grid_size(1), grid_size(2), targetFreq/1e9, asf);
+filename = sprintf('Z_results/%dx%d_UPA_%.2fGHz_Z.mat', ...
+    grid_size(1), grid_size(2), targetFreq/1e9);
 save(filename, 'Z_matrix', 'targetFreq', 'grid_size');

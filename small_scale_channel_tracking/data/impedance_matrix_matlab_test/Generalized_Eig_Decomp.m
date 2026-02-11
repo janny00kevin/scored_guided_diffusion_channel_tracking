@@ -1,174 +1,93 @@
-%% Generalized_Eig_Decomp.m
+%% Generalized_Eig_Decomp_Sweep.m
 clear; clc;
 
-% --- 1. Configuration (Match your saved file) ---
-targetFreq_GHz = 39;  % Note: 2, 28, or 39, this file doesn't need the accurate freq
+% ==========================================
+% 1. Configuration
+% ==========================================
+freqs_GHz = [38.65, 38.70, 38.75, 38.80, 38.85]; % The 5 points you simulated
+grid_size = [7, 7];  % Currently testing 2x2
 asf = 2;             % Antenna spacing factor
-n = 7;
-grid_size = [n n]; % [Rows, Columns] 
-GEVD_type = 'XR'; % 'RX' for \R\U = \X\U\Lambda, 'XR' for \X\U = \R\U\Lambda
 
-% --- 2. Load the Data ---
-filename = sprintf('Z_results/%dx%d_UPA_%.0fGHz_spacing%d_Z.mat', ...
-    grid_size(1), grid_size(2), targetFreq_GHz, asf);
+% Input/Output Directories
+input_dir = 'Z_results';
+output_dir = 'eigen_result';
 
-if ~isfile(filename)
-    error('File not found: %s', filename);
+if ~exist(output_dir, 'dir')
+    mkdir(output_dir);
 end
 
-fprintf('Loading Z-Matrix from: %s\n', filename);
-data = load(filename);
-Z_T = data.Z_matrix;
+fprintf('--- Starting GEVD Sweep for %d Frequencies ---\n', length(freqs_GHz));
 
-% --- 3. Separate Real (R_T) and Imaginary (X_T) Parts ---
-% Z_T = R_T + j * X_T
-R_T = real(Z_T);
-X_T = imag(Z_T);
+% ==========================================
+% 2. Main Loop
+% ==========================================
+for i = 1:length(freqs_GHz)
+    targetFreq = freqs_GHz(i);
 
-fprintf('\n------------------------------------------------\n');
-fprintf('Matrices Extracted:\n');
-fprintf('R_T (Resistance): %dx%d\n', size(R_T));
-fprintf('X_T (Reactance):  %dx%d\n', size(X_T));
+    % --- A. Load Z-Matrix ---
+    % Filename format: "2x2_UPA_38.65GHz_Z.mat"
+    filename = sprintf('%dx%d_UPA_%.2fGHz_Z.mat', ...
+        grid_size(1), grid_size(2), targetFreq);
+    full_path = fullfile(input_dir, filename);
 
-% --- 4. Compute Generalized Eigendecomposition ---
-% Equation: R_T * U_T = X_T * U_T * Lambda_T
-% In MATLAB: [V, D] = eig(A, B) solves A*V = B*V*D
-% Here: A = R_T, B = X_T
+    if ~isfile(full_path)
+        warning('File not found: %s. Skipping...', filename);
+        continue;
+    end
 
-disp('Computing Generalized Eigenvalues [eig(R_T, X_T)]...');
-if strcmp(GEVD_type, 'RX')
-    fprintf('Using GEVD Type: R*U = X*U*Lambda\n');
-    [U_T, Lambda_T_Matrix] = eig(R_T, X_T);
-elseif strcmp(GEVD_type, 'XR')
-    fprintf('Using GEVD Type: X*U = R*U*Lambda\n');
-    [U_T, Lambda_T_Matrix] = eig(X_T, R_T);
-end
+    fprintf('[%d/%d] Processing %.2f GHz...', i, length(freqs_GHz), targetFreq);
+    data = load(full_path);
+    Z_T = data.Z_matrix;
+    % --- B. Separate R and X ---
+    R_T = real(Z_T);
+    X_T = imag(Z_T);
 
-% Extract diagonal eigenvalues for easier viewing
-lambda_values = diag(Lambda_T_Matrix);
-% 1. Get the indices based on MAGNITUDE (Absolute Value)
-if strcmp(GEVD_type, 'RX')
-    [~, sort_idx] = sort(abs(lambda_values), 'descend');
-elseif strcmp(GEVD_type, 'XR')
+    % --- C. Solve Generalized Eigenvalue Problem ---
+    % PDF Eq (4): X_T * u = lambda * R_T * u
+    % This defines lambda = X/R (Characteristic Values)
+    % Ideally, lambda close to 0 is resonant.
+    [U_raw, Lambda_Matrix] = eig(X_T, R_T);
+
+    lambda_values = diag(Lambda_Matrix);
+
+    % --- D. Normalization (PDF Eq 5) ---
+    % Requirement: u^H * R * u = 1
+    [N, M] = size(U_raw);
+    U_norm = zeros(N, M);
+
+    for k = 1:M
+        u_k = U_raw(:, k);
+
+        % Calculate radiated power of this mode
+        p_rad = u_k' * R_T * u_k;
+
+        % Check for numerical stability (p_rad should be positive real)
+        if abs(p_rad) < 1e-15
+            scaling = 1.0; % Avoid division by zero for null modes
+            print('Warning: p_rad is very small (close to zero). Scaling set to 1.0.')
+        else
+            scaling = 1.0 / sqrt(abs(p_rad)); % Use abs to handle tiny numerical imag parts
+        end
+
+        U_norm(:, k) = u_k * scaling;
+    end
+    % --- E. Sorting (Initial) ---
+    % We sort by Magnitude of lambda (Smallest |X/R| first)
+    % This puts "Resonant" (or ghost resonant) modes at index 1
+    % And "High Q/Capacitive" modes at the end.
     [~, sort_idx] = sort(abs(lambda_values), 'ascend');
+
+    lambda_sorted = lambda_values(sort_idx);
+    U_T_sorted = U_norm(:, sort_idx);
+
+    % --- F. Save Results ---
+    % Format: "2x2_UPA_38.65GHz_spacing2_eigen.mat"
+    out_name = sprintf('%dx%d_UPA_%.2fGHz_eigen.mat', ...
+        grid_size(1), grid_size(2), targetFreq);
+    save_path = fullfile(output_dir, out_name);
+
+    save(save_path, 'U_T_sorted', 'lambda_sorted', 'freqs_GHz', 'grid_size');
+    fprintf(' Done. Saved to %s\n', out_name);
 end
-lambda_sorted = lambda_values(sort_idx);
-% 2. CRITICAL: Reorder the Eigenvectors (U_T) using the same index
-U_T_sorted = U_T(:, sort_idx);
-% normalize each eigenvector to have unit norm
-for i = 1:size(U_T_sorted, 2)
-    U_T_sorted(:, i) = U_T_sorted(:, i) / norm(U_T_sorted(:, i));
-end
 
-% --- 5. Display Results ---
-fprintf('\nGeneralized Eigenvalues (Lambda_T):\n');
-disp(lambda_sorted);
-
-% fprintf('Eigenvectors (Columns of U_T):\n');
-% disp(U_T);
-
-% 1. Create the folder if it doesn't exist
-output_folder = 'eigen_result';
-if ~exist(output_folder, 'dir')
-    mkdir(output_folder);
-    fprintf('Folder created: %s\n', output_folder);
-end
-% 
-% % 3. Construct Filename
-% filename_str = sprintf('%dx%d_UPA_%.0fGHz_spacing%d_eigen.mat', ...
-%     grid_size(1), grid_size(2), targetFreq_GHz, asf);
-% full_path = fullfile(output_folder, filename_str);
-% 
-% % 4. Save variables
-% % We save the sorted versions as the primary 'U_T' and 'Lambda_T' for ease of use later
-% save(full_path, 'U_T_sorted', 'lambda_sorted', 'grid_size', 'targetFreq_GHz', 'asf');
-% 
-% fprintf('Successfully saved sorted eigen-data to:\n%s\n', full_path);
-
-% % --- 6. Calculate Successive Eigenvalue Ratios ---
-% % Formula: ratio(i) = lambda(i) / lambda(i+1)
-% num_ratios = length(lambda_sorted) - 1;
-% lambda_ratios = zeros(num_ratios, 1);
-
-% for i = 1:num_ratios
-%     lambda_ratios(i) = lambda_sorted(i) / lambda_sorted(i+1);
-% end
-
-% % --- 7. Print Ratios (Truncated Display) ---
-% fprintf('\nSuccessive Eigenvalue Ratios (lambda_i / lambda_i+1) for %dGHz:\n', targetFreq_GHz);
-% disp(lambda_ratios)
-
-
-
-
-
-
-
-
-
-
-
-
-
-% % Heatmap Visualization
-% % Z_T(logical(eye(size(Z_T)))) = 0;
-% Z_T = abs(Z_T);
-% fig = figure('visible', 'off');
-% imagesc(Z_T);
-% colorbar;
-% title(['Impedance Matrix Z_T (' num2str(grid_size(1)) 'x' num2str(grid_size(2)) ' elements)']);
-% xlabel('Antenna Index (j)');
-% ylabel('Antenna Index (i)');
-% axis square;
-% filename = sprintf('Z_results/%dx%d_spacing%d_%.0fGHz_Z_heatmap.png', ...
-%                    grid_size(1), grid_size(2), asf, targetFreq_GHz);
-% saveas(fig, filename);
-% close(fig);
-
-% fprintf('Successfully saved sorted heatmap to:\n%s\n', filename);
-
-% once you have the true C_T, compute ||  \C_T - \hbC_T ||_F
-% \hbC_T is the approximation using the eigencomponents of the impedance matrix
-% can try using the first 2, and can try up to and including 1.0183
-% i want to be able to see a progression of error
-% you may want to plot this vs. # of eigencomponents
-% y-axis =  ||  \C_T  - \hbC_T ||_F
-% x-axis = # of eigencomponents
-% starting with first eigenvalue and go down until the last positive eigenvalue
-% can you do that today?
-% then plot it until 40
-% do the same for C_R
-
-% Carrson C. Fung
-% 10:01 AM
-% that's not right
-% they shouldn't ovelap
-% if they are overlapping, then yes, you should make the antenna size smaller so there will not be any overlap
-
-% Carrson C. Fung
-% 10:02 AM
-% try looking at the matlab tutorial or online to see how to shrink the size of the antennas
-% you should be able to change the spacing arbitrary, theoretically to 0 so your array is a continuous aperature
-% arbitraily
-
-% Carrson C. Fung
-% 10:04 AM
-% for XL-MIMO, # of elements in the 1000's,    spacing can be \lambda/2 or less
-% for HMIMO, spacing << \lambda/2
-% for HMIMO, # of elements = 10K's
-% so how many we can simulate depends on memory of our PCs
-
-% Carrson C. Fung
-% 10:05 AM
-% that's why i said if necessary, I can buy a PC with "lots" of memory to do the sims
-% if not, we can try to use the servers at NCHC
-% i will just pay for the usage time
-% cuz we won't be able to match their compute power
-
-% Carrson C. Fung
-% 10:06 AM
-% i mean even if I buy a PC with 256GB RAM and the latest server Intel processor, it will never match what NCHC has
-
-% Carrson C. Fung
-% 10:08 AM
-% i can't read the article
+fprintf('--- Sweep Complete ---\n');
