@@ -8,7 +8,13 @@ n = 7;
 grid_size = [n n]; % [Rows, Columns] 
 
 % 1. Create the base element
-p_element = createPatchAntenna_39GHz();
+if targetFreq > 30e9
+    p_element = createPatchAntenna_39GHz();
+elseif targetFreq > 20e9
+    p_element = createPatchAntenna_28GHz();
+else
+    p_element = createPatchAntenna_2GHz();
+end
 
 % 2. Define Target Frequency and Physics
 if ~exist('targetFreq', 'var')

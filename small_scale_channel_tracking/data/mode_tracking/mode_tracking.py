@@ -8,7 +8,8 @@ import os
 # 1. Configuration
 # ==========================================
 # Frequencies must match your Bash script exactly
-freqs_ghz = [38.65, 38.70, 38.75, 38.80, 38.85]
+# freqs_ghz = [38.65, 38.70, 38.75, 38.80, 38.85]
+freqs_ghz = [2.0125, 2.0375, 2.0625, 2.0875, 2.1125]
 
 grid_size = [7, 7]  # 49 elements
 num_modes = grid_size[0] * grid_size[1]
@@ -127,8 +128,8 @@ def main():
     plt.ylabel('Eigenvalue (X/R)', fontsize=14)
     plt.title(f'Characteristic Eigenvalue Evolution\n{grid_size[0]}x{grid_size[1]} UPA', fontsize=16)
 
-    main_ticks = [38.65, 38.70, 38.75, 38.80, 38.85]
-    plt.xticks(main_ticks)
+    # main_ticks = [38.65, 38.70, 38.75, 38.80, 38.85]
+    plt.xticks(freqs_ghz)
     
     # Use SymLog (Symmetric Log) to see detail near 0 while handling large values
     plt.yscale('symlog', linthresh=1.0) 
