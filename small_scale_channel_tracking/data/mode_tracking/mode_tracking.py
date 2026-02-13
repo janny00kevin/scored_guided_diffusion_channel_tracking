@@ -18,6 +18,7 @@ num_modes = grid_size[0] * grid_size[1]
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 Z_DIR = os.path.join(SCRIPT_DIR, "Z_results")
 EIGEN_DIR = os.path.join(SCRIPT_DIR, "eigen_result")
+OUTPUT_DIR = os.path.join(SCRIPT_DIR, "Mode_Tracking_All_Plots")
 
 def load_step(freq):
     """Loads U (Eigenvectors) and R (Resistance) for a specific frequency."""
@@ -143,7 +144,7 @@ def main():
 
     plt.tight_layout()
     
-    save_file = os.path.join(SCRIPT_DIR, f"Mode_Tracking_All_Modes_{freqs_ghz[2]:.2f}GHz.png")
+    save_file = os.path.join(OUTPUT_DIR, f"Mode_Tracking_All_Modes_{freqs_ghz[2]:.2f}GHz.png")
     plt.savefig(save_file, dpi=300)
     print(f"Tracking complete. Plot saved to: {save_file}")
     # plt.show()

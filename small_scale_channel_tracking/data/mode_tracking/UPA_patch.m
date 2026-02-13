@@ -8,6 +8,7 @@ n = 7;
 grid_size = [n n]; % [Rows, Columns] 
 
 % 1. Create the base element
+addpath('single_antenna');
 if targetFreq > 30e9
     p_element = createPatchAntenna_39GHz();
 elseif targetFreq > 20e9
