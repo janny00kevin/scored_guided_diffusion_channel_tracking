@@ -4,7 +4,7 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Configurations
 asf = 2;  % antenna_space = lambda / asf (e.g., lambda/2)
-n = 7;
+n = 2;
 grid_size = [n n]; % [Rows, Columns] 
 
 % 1. Create the base element

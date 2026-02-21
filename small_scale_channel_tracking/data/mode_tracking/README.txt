@@ -11,3 +11,5 @@ Then move the UPA_patch files from NCHC back to 72 run again to see the result.
 3. run mode_tracking.py to compute eigenvectors correlation to track the eigenvalues for 5 adjencent freqs
     plot the eigenvalues varying along different freqs (manually modify freqs_GHz needed)
 - The results (Mode_Tracking_All_Modes.png) shows that they are all flat, only 1 mode across 0 (39GHz).
+
+4. Modify the bash files (or directly run the modified UPA_patch.m) to get 2x2 UPA's Z & EVs, and GEVD.m too.
