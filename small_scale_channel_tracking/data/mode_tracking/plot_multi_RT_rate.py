@@ -13,16 +13,16 @@ CHAN_DIR = os.path.join(SCRIPT_DIR, "..", "channel")
 
 # --- Mode Selection ---
 # Set to 39 for 39 GHz band, or 2 for 2 GHz band
-MODE = 39 
+MODE = 2
 
 if MODE == 39:
     CENTER_FREQ_STR = "38.75"  # Exact string used in your new MATLAB saves
     CHANNEL_FREQ_GHZ = 39      # Integer used for channel tracing filename
-    RT_LIST = [1, 3, 6]        # The rank truncations to test
+    RT_LIST = [1, 2, 3, 49]        # The rank truncations to test
 elif MODE == 2:
     CENTER_FREQ_STR = "2.06"
     CHANNEL_FREQ_GHZ = 2
-    RT_LIST = [10, 20, 43]     # Example list for 2 GHz
+    RT_LIST = [10, 20, 43, 49]     # Example list for 2 GHz
 
 # Array Dimensions
 TX_DIM = [7, 7]
@@ -117,7 +117,7 @@ def main():
     for rt in RT_LIST:
         # Note: Your new GEVD script sorted abs(lambda) in ASCENDING order. 
         # The smallest eigenvalues (lowest X/R) are at the FRONT.
-        U_T_trunc = U_T_full[:, :49] 
+        U_T_trunc = U_T_full[:, :rt] 
         
         term1 = np.matmul(U_R_trunc.conj().T[None, :, :], H_c_all) 
         H_tilde_all[rt] = np.matmul(term1, U_T_trunc[None, :, :]) 
@@ -148,7 +148,7 @@ def main():
 
     # 5. Plotting
     plt.figure(figsize=(10, 7))
-    plt.plot(SNR_dB_Range, rate_coupling_avg, 'b-o', label=f'Full Coupling Aware ($N_T={N_T}$)', linewidth=2.5)
+    # plt.plot(SNR_dB_Range, rate_coupling_avg, 'b-o', label=f'Full Coupling Aware ($N_T={N_T}$)', linewidth=2.5)
     
     # Plotting different RT lines with distinct colors and markers
     colors = ['orange', 'green', 'red', 'purple', 'cyan']

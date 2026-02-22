@@ -8,7 +8,7 @@ clear; clc;
 % freqs_GHz = [2.0125, 2.0375, 2.0625, 2.0875, 2.1125];
 % freqs_GHz = [38.75];
 freqs_GHz = [2.0625];
-grid_size = [2, 2];  % Currently testing 2x2
+grid_size = [7, 7];  % Currently testing 2x2
 asf = 2;             % Antenna spacing factor
 
 % Input/Output Directories
@@ -54,25 +54,14 @@ for i = 1:length(freqs_GHz)
     lambda_values = diag(Lambda_Matrix);
 
     % --- D. Normalization (PDF Eq 5) ---
-    % Requirement: u^H * R * u = 1
+    % Requirement: ||u_k||_2 = 1 (Euclidean Norm)
     [N, M] = size(U_raw);
     U_norm = zeros(N, M);
 
     for k = 1:M
         u_k = U_raw(:, k);
-
-        % Calculate radiated power of this mode
-        p_rad = u_k' * R_T * u_k;
-
-        % Check for numerical stability (p_rad should be positive real)
-        if abs(p_rad) < 1e-15
-            scaling = 1.0; % Avoid division by zero for null modes
-            print('Warning: p_rad is very small (close to zero). Scaling set to 1.0.')
-        else
-            scaling = 1.0 / sqrt(abs(p_rad)); % Use abs to handle tiny numerical imag parts
-        end
-
-        U_norm(:, k) = u_k * scaling;
+        % Divide the vector by its L2 norm to make its length exactly 1
+        U_norm(:, k) = u_k / norm(u_k);
     end
     % --- E. Sorting (Initial) ---
     % We sort by Magnitude of lambda (Smallest |X/R| first)
