@@ -36,7 +36,7 @@ Z0 = 50
 SNR_dB_Range = np.arange(-4, 12, 2) # [-4, -2, 0, 2, ..., 10]
 
 # Paths
-DATA_DIR = os.path.join(SCRIPT_DIR, "data")
+DATA_DIR = os.path.join(SCRIPT_DIR, "..", "data")
 OUTPUT_DIR = os.path.join(SCRIPT_DIR, "achievable_rate_plot")
 if not os.path.exists(OUTPUT_DIR):
     os.makedirs(OUTPUT_DIR)
