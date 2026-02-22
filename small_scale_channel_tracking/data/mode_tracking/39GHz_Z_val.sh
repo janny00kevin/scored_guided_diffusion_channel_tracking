@@ -1,9 +1,9 @@
 
 
-cd /media/commlab/TenTB/home/bobo/scored_guided_diffusion_channel_tracking/small_scale_channel_tracking/data/impedance_matrix_matlab_test/
+cd /media/commlab/TenTB/home/bobo/scored_guided_diffusion_channel_tracking/small_scale_channel_tracking/data/mode_tracking/
 
-freqs=(38.65 38.70 38.75 38.80 38.85)
-# freqs=(38.65)
+# freqs=(38.65 38.70 38.75 38.80 38.85)
+freqs=(38.75)
 
 for freq in "${freqs[@]}"
 do
