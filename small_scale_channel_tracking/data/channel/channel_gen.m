@@ -5,9 +5,9 @@ addpath('TS38901');
 rng(0);
 
 % --- 1. Configuration ---
-f_c = 28;  % 2.0625, 28, or 38.75 GHz
+f_c = 38.75;  % 2.0625, 28, or 38.75 GHz
 nTxxy = [7 7];
-nRxxy = [2 2];
+nRxxy = [1 1];
 num_samples = 3000;
 
 % General setting for channel generation
@@ -15,7 +15,7 @@ loc_BSs = [0; 0; 20000];
 loc_UTs = [0; 0; 0];     % set distance between BSs and UT to be around 680 m in 2D [min 35 m in 2D]
 ori_BSs = [1 0 0; 0 1 0; 0 0 -1];
 ori_UTs = [1 0 0; 0 1 0; 0 0 1];
-f_arr = [2 2]; % UPA n UPA
+f_arr = [2 0]; % UPA n UPA
 f_LOSProb = 'LOS';
 Tx_d_arr = [0.5 0.5]; % antenna spacing in wavelengths
 Rx_d_arr = [0.5 0.5];
