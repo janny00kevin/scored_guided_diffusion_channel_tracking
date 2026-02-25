@@ -65,7 +65,7 @@ def ddim_tracking_sampler(y_obs_complex, M_complex, x0_tau_complex, rho,
             
             # Gradient: M^H * (y - M * x0) / sigma^2
             err_cplx = y_obs_complex - torch.matmul(x0_hat_phys_cplx, M_complex.t())
-            grad_cplx = torch.matmul(err_cplx, M_complex.conj()) / max(sigma_n2, 0.1)
+            grad_cplx = torch.matmul(err_cplx, M_complex.conj()) / (sigma_n2 + 1e-12)
             
             # Map complex gradient back to normalized real space (Chain Rule)
             grad_real = complex_to_real_concat(grad_cplx)
@@ -91,7 +91,7 @@ def ddim_tracking_sampler(y_obs_complex, M_complex, x0_tau_complex, rho,
         x0_hat_phys_real = x0_hat_final_norm * data_std + data_mean
         x0_hat_phys_cplx = real_to_complex_concat(x0_hat_phys_real)
         err_cplx = y_obs_complex - torch.matmul(x0_hat_phys_cplx, M_complex.t())
-        grad_cplx = torch.matmul(err_cplx, M_complex.conj()) / max(sigma_n2, 0.1)
+        grad_cplx = torch.matmul(err_cplx, M_complex.conj()) / (sigma_n2 + 1e-12)
         grad_norm = complex_to_real_concat(grad_cplx) * data_std
         
         x0_hat_final_guided_norm = x0_hat_final_norm + guidance_lambda * grad_norm

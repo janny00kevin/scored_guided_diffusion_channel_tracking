@@ -11,7 +11,7 @@ import numpy as np
 FILES = {
     "Kalman Filter": "NMSE_Baseline_Kalman_Filter.mat",
     # Once you finish the DDIM testing script, you can simply uncomment and add its .mat file here:
-    # "DDIM Tracker": "NMSE_Tracker_DDIM_39GHz.mat", 
+    "DDIM Tracker": "NMSE_Tracker_DDIM_39GHz.mat", 
 }
 
 STYLES = {

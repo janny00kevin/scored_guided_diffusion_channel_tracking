@@ -23,7 +23,7 @@ NUM_TEST_SAMPLES = 3000
 SNR_LEVELS = [-4, -2, 0, 2, 4, 6, 8, 10]
 
 # Tracking Physics Parameters
-RHO = 0.995        # Temporal correlation (velocity dependent)
+RHO = 0.900        # Temporal correlation (velocity dependent)
 NUM_PILOTS = 5     # T >= r_T
 
 # Input Paths

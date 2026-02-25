@@ -27,16 +27,16 @@ PATIENCE = 15
 # Diffusion Process Settings
 BETA_MIN = 1e-4
 BETA_MAX = 0.02
-T_DIFFUSION = 50.0
+T_DIFFUSION = 1000.0
 
 
 # --- Tunable Tracking Parameters ---
 NUM_TEST_SAMPLES = 3000
-NUM_SAMPLING_STEPS = 50
+NUM_SAMPLING_STEPS = 1000
 # K_START defines how much noise to add to the KF prediction. 
 # For rho=0.995 (very accurate prediction), a small value (15) is perfect. 
 # If tracking faster users (e.g. rho=0.8), you would increase this.
-K_START = 3
+K_START = 10
 GUIDANCE_LAMBDA = 0.1
 # -----------------------------------
 
@@ -130,7 +130,7 @@ elif MODE == 'test':
     nmse_results = []
     
     for snr in config["snr_levels"]:
-        print(f"\n--- Processing SNR = {snr} dB ---")
+        # print(f"\n--- Processing SNR = {snr} dB ---")
         y_obs = observations[snr].to(device)
         
         # 3. Denoise / Track
@@ -159,8 +159,20 @@ elif MODE == 'test':
         nmse_db = 10 * torch.log10(mse / ref).item()
         nmse_results.append(nmse_db)
         
-        print(f"  SNR {snr:2d} dB | DDIM Tracking NMSE: {nmse_db:6.2f} dB")
+        # print(f"  SNR {snr:2d} dB | DDIM Tracking NMSE: {nmse_db:6.2f} dB")
         
+    print("\n" + "="*60)
+    print("FINAL TRACKING NMSE RESULTS")
+    print("="*60)
+    
+    # Format as aligned horizontal arrays
+    snr_str  = " | ".join([f"{snr:6d}" for snr in config["snr_levels"]])
+    nmse_str = " | ".join([f"{nmse:6.2f}" for nmse in nmse_results])
+    
+    print(f"SNR (dB)  : [ {snr_str} ]")
+    print(f"NMSE (dB) : [ {nmse_str} ]")
+    print("="*60 + "\n")
+    
     # 5. Save Results
     res_filename = f"NMSE_Tracker_DDIM_{FREQ_GHZ}GHz.mat"
     res_path = os.path.join(script_dir, "test_results", "NMSE_raw_mats")
