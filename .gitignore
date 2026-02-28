@@ -9,6 +9,8 @@ plot_antenna_layout
 plot_S
 plot_Z
 # eigen_result
+x0_dataset/
+testing_dataset/
 
 *.mat
 tmp.py

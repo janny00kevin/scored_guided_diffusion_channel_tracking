@@ -8,7 +8,7 @@ rng(0);
 f_c = 38.75;  % 2.0625, 28, or 38.75 GHz
 nTxxy = [7 7];
 nRxxy = [1 1];
-num_samples = 3000;
+num_samples = 1000000;
 
 % General setting for channel generation
 loc_BSs = [0; 0; 20000];
@@ -26,16 +26,18 @@ room_size = [120 50 15];  % only for InF scenario % ISD = 500m according to tabl
 r_clutter = 0.4; % only for InF scenario
 h_clutter = 10; % only for InF scenario
 f_scenario = "UMa";
-Rx_antenna_G = 8;
 
+tic;
 parfor i = 1:num_samples
-    H = chan_gen(loc_BSs,loc_UTs,ori_BSs,ori_UTs,nTxxy,nRxxy,f_arr,f_c,f_scenario,f_LOSProb,Tx_d_arr,Rx_d_arr,Tx_antenna_G,Rx_antenna_G,f_disable,room_size,r_clutter,h_clutter);
+    H = chan_gen_small_scale(loc_BSs,loc_UTs,ori_BSs,ori_UTs,nTxxy,nRxxy,f_arr,f_c,f_scenario,f_LOSProb,Tx_d_arr,Rx_d_arr,Tx_antenna_G,Rx_antenna_G,f_disable,room_size,r_clutter,h_clutter);
     % while abs(H{1}(1)) > 1e-4 || abs(H{1}(1)) < 1e-6
     %     H = chan_gen(loc_BSs,loc_UTs,ori_BSs,ori_UTs,nTxxy,nRxxy,f_arr,f_c,f_scenario,f_LOSProb,Tx_d_arr,Rx_d_arr,Tx_antenna_G,Rx_antenna_G,f_disable,room_size,r_clutter,h_clutter);
     % end
     H_samples(i,:,:) = single(H{1});
 end
+totalTime = toc;
+fprintf('Simulation took %.2f minutes.\n', totalTime/60);
 
-filename = sprintf('channel_data_%.0fGHz_%dx%dTx_%dx%dRx_%dsamples.mat', ...
+filename = sprintf('channel_data_SC_%.0fGHz_%dx%dTx_%dx%dRx_%dsamples.mat', ...
     f_c, nTxxy(1), nTxxy(2), nRxxy(1), nRxxy(2), num_samples);
 save(filename,'H_samples','-v7.3');
