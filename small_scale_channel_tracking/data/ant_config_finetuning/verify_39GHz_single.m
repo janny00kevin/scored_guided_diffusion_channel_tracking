@@ -6,9 +6,9 @@ addpath('single_antenna');
 
 % 1. Define target frequency and sweep range
 targetFreq = 38.75e9; % 38.75 GHz
-f_start = 35.5e9;
-f_end = 42.0e9;
-f_sweep = linspace(f_start, f_end, 41); 
+f_start = 38.0e9;
+f_end = 39.5e9;
+f_sweep = linspace(f_start, f_end, 61); 
 
 % 2. Create the antenna object
 p = createPatchAntenna_39GHz();
@@ -16,7 +16,7 @@ p = createPatchAntenna_39GHz();
 % Set mesh manually for consistent calculation
 c = 299792458;
 lambda = c / targetFreq;
-mesh(p, 'MaxEdgeLength', lambda / 8);
+mesh(p, 'MaxEdgeLength', lambda / 6);
 
 % 3. Calculate S-parameters
 fprintf('Calculating S-parameters around %.2f GHz...\n', targetFreq/1e9);

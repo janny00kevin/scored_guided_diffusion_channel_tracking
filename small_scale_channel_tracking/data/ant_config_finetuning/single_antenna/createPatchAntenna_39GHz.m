@@ -11,7 +11,7 @@ function p = createPatchAntenna_39GHz()
     % Object Construction
     p = patchMicrostrip;
     % Dimensions from calculation
-    p.Length = 0.0023;     % L = 2.3 mm
+    p.Length = 0.002243;     % L = 2.3 mm
     p.Width = 0.0031;      % W = 3.1 mm
     p.Height = height;     % h = 0.5 mm
     % Substrate Configuration

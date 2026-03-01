@@ -3,11 +3,11 @@ clear;
 
 % 1. Define Target and Sweep Range
 targetFreq = 38.75e9;
-f_sweep = linspace(37.5e9, 40e9, 51);
+f_sweep = linspace(38.0e9, 39.5e9, 61);
 
 % 2. Define Lengths to Test 
 % Testing 2.23 mm, 2.25 mm, and 2.27 mm
-lengths_to_test = [0.00223, 0.00225, 0.00227]; 
+lengths_to_test = [0.002235, 0.002240, 0.002245];
 
 % Prepare the plot (invisible figure)
 fig = figure('Visible', 'off');
@@ -36,7 +36,7 @@ for i = 1:length(lengths_to_test)
 
     % Mesh and calculate
     c = 299792458;
-    mesh(p, 'MaxEdgeLength', (c/targetFreq) / 10);
+    mesh(p, 'MaxEdgeLength', (c/targetFreq) / 6);
     
     S_obj = sparameters(p, f_sweep);
     S11_dB = squeeze(20*log10(abs(S_obj.Parameters(1,1,:))));
