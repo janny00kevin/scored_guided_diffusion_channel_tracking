@@ -11,6 +11,7 @@ plot_Z
 # eigen_result
 x0_dataset/
 testing_dataset/
+mode_verification/
 
 *.mat
 tmp.py
