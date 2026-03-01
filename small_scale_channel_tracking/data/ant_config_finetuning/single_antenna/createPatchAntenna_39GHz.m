@@ -11,7 +11,7 @@ function p = createPatchAntenna_39GHz()
     % Object Construction
     p = patchMicrostrip;
     % Dimensions from calculation
-    p.Length = 0.002243;     % L = 2.3 mm
+    p.Length = 0.002360;     % 2.368 mm (Micro-adjusted from 2.370)
     p.Width = 0.0031;      % W = 3.1 mm
     p.Height = height;     % h = 0.5 mm
     % Substrate Configuration
@@ -25,5 +25,5 @@ function p = createPatchAntenna_39GHz()
     % MATLAB FeedOffset is [x y] from the center of the patch.
     % To match 50 Ohm at x0 = 0.7mm from the edge:
     % Offset = (Length/2) - x0 => (2.3/2) - 0.7 = 0.45 mm
-    p.FeedOffset = [0.00045, 0];
+    p.FeedOffset = [0.00085, 0];
 end
