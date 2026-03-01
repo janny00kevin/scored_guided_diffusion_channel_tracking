@@ -6,7 +6,7 @@
 targetFreq = 38.75e9;
 % targetFreq = 2.0625e9;
 asf = 2;  % antenna_space = lambda / asf (e.g., lambda/2)
-n = 5;
+n = 3;
 grid_size = [n n]; % [Rows, Columns] 
 
 % Ensure directories exist
