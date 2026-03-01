@@ -3,23 +3,23 @@ clear;
 
 % 1. Define Target and Sweep Range
 targetFreq = 38.75e9;
-f_sweep = linspace(38.0e9, 39.5e9, 61);
+f_sweep = linspace(38.5e9, 39.2e9, 71); % Zoomed in!
 
-% 2. Lock in our best Feed Offset
-best_feed = 0.00085; % 0.85 mm
+% 2. Lock in our perfect Feed Offset
+best_feed = 0.00090; % 0.90 mm
 
-% 3. Test longer lengths to hit 38.75 GHz
-lengths_to_test = [0.00237, 0.00239, 0.00241]; 
+% 3. Test slightly longer lengths to hit exactly 38.75 GHz
+lengths_to_test = [0.002375, 0.002377, 0.002379]; 
 
 fig = figure('Visible', 'off');
 hold on; grid on;
 colors = {'r', 'b', 'm'};
 
-fprintf('\n=== Final Length Re-Tuning Sweep ===\n');
+fprintf('\n=== Final Length Micro-Tuning Sweep ===\n');
 
 for i = 1:length(lengths_to_test)
     L = lengths_to_test(i);
-    fprintf('Testing Length = %.3f mm...\n', L*1000);
+    fprintf('Testing Length = %.4f mm...\n', L*1000);
     
     p = patchMicrostrip;
     p.Length = L;
@@ -32,7 +32,7 @@ for i = 1:length(lengths_to_test)
     
     p.GroundPlaneLength = 0.005;
     p.GroundPlaneWidth = 0.0058;
-    p.FeedOffset = [best_feed, 0]; % Using the locked 0.85mm offset
+    p.FeedOffset = [best_feed, 0]; % Using the golden 0.90mm offset
 
     c = 299792458;
     mesh(p, 'MaxEdgeLength', (c/targetFreq) / 6);
@@ -41,10 +41,10 @@ for i = 1:length(lengths_to_test)
     S11_dB = squeeze(20*log10(abs(S_obj.Parameters(1,1,:))));
     
     [min_S11, min_idx] = min(S11_dB);
-    fprintf('  -> Peak at %.3f GHz (S11 = %.2f dB)\n', f_sweep(min_idx)/1e9, min_S11);
+    fprintf('  -> Peak at %.4f GHz (S11 = %.2f dB)\n', f_sweep(min_idx)/1e9, min_S11);
     
     plot(f_sweep/1e9, S11_dB, 'Color', colors{i}, 'LineWidth', 2, ...
-        'DisplayName', sprintf('L = %.3f mm', L*1000));
+        'DisplayName', sprintf('L = %.4f mm', L*1000));
 end
 
 xline(targetFreq/1e9, 'g--', 'Target 38.75 GHz', 'LineWidth', 1.5, 'HandleVisibility', 'off');
@@ -53,7 +53,7 @@ yline(-10, 'k:', 'Good Match (-10 dB)', 'LineWidth', 1.5, 'HandleVisibility', 'o
 xlabel('Frequency (GHz)');
 ylabel('S11 Magnitude (dB)');
 legend('Location', 'best');
-title('Final Patch Length Tuning (Offset = 0.85 mm)');
+title('Final Patch Length Micro-Tuning (Offset = 0.90 mm)');
 
 output_dir = 'S_results';
 if ~exist(output_dir, 'dir')
