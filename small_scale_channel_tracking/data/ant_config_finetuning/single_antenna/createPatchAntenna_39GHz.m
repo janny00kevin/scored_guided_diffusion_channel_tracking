@@ -5,17 +5,25 @@ function p = createPatchAntenna_39GHz()
     % https://3g-aerial.biz/en/online-calculations/antenna-calculations/patch-antenna-online-calculator
     
     targetFreq = 38.75e9;  % 38750 MHz
-    epsilonR = 4.4;
-    height = 0.0014;       % 1.4 mm
+    epsilonR = 2.2;        % Updated from 4.4 to 2.2
+    height = 0.0005;       % 0.5 mm
     
     % Object Construction
     p = patchMicrostrip;
-    p.Length = 0.00106;    % 1.06 mm
-    p.Width = 0.0024;      % 2.4 mm
-    p.Height = height;
-    p.Substrate = dielectric('FR4');
+    % Dimensions from calculation
+    p.Length = 0.0023;     % L = 2.3 mm
+    p.Width = 0.0031;      % W = 3.1 mm
+    p.Height = height;     % h = 0.5 mm
+    % Substrate Configuration
+    p.Substrate = dielectric('Name', 'Custom_Substrate');
     p.Substrate.EpsilonR = epsilonR;
-    p.GroundPlaneLength = 0.0032; % 3.2 mm
-    p.GroundPlaneWidth = 0.0045;  % 4.5 mm
-    p.FeedOffset = [0.00016 0];
+    p.Substrate.Thickness = height;
+    % Ground Plane Dimensions
+    p.GroundPlaneLength = 0.005;  % eL = 5.0 mm
+    p.GroundPlaneWidth = 0.0058;  % eW = 5.8 mm
+    % Feed Offset Calculation
+    % MATLAB FeedOffset is [x y] from the center of the patch.
+    % To match 50 Ohm at x0 = 0.7mm from the edge:
+    % Offset = (Length/2) - x0 => (2.3/2) - 0.7 = 0.45 mm
+    p.FeedOffset = [0.00045, 0];
 end

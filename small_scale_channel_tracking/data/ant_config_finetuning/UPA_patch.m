@@ -3,10 +3,10 @@
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Configurations
-% targetFreq = 38.75e9;
-targetFreq = 2.0625e9;
+targetFreq = 38.75e9;
+% targetFreq = 2.0625e9;
 asf = 2;  % antenna_space = lambda / asf (e.g., lambda/2)
-n = 2;
+n = 5;
 grid_size = [n n]; % [Rows, Columns] 
 
 % Ensure directories exist
@@ -70,7 +70,7 @@ close(fig);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Define a reasonable mesh size
-meshSize = lambda / 10; 
+meshSize = lambda / 6; 
 mesh(upa, 'MaxEdgeLength', meshSize);
 
 % 4. Calculate S-parameters
