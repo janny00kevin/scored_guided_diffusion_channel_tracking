@@ -9,7 +9,7 @@ Testing Length = 2.240 mm...
 Testing Length = 2.245 mm...
   -> Peak at 38.725 GHz (S11 = -4.80 dB)
 
--> 0.2243 
+-> 0.002243 
 then run verify_39GHz_single.m again to confirm the final S11 plot with the optimized length
 
 3. Run tune_feed_length_39GHz.m to fine-tune the feed length
@@ -28,3 +28,15 @@ Testing Feed Offset = 0.95 mm...
 
 -> 0.85 mm
 need to tune the length again with the new feed offset
+
+=== Final Length Re-Tuning Sweep ===
+Testing Length = 2.370 mm...
+  -> Peak at 38.725 GHz (S11 = -15.50 dB)
+Testing Length = 2.390 mm...
+  -> Peak at 38.450 GHz (S11 = -16.00 dB)
+Testing Length = 2.410 mm...
+  -> Peak at 38.450 GHz (S11 = -21.72 dB)
+
+-> 0.002368
+
+
