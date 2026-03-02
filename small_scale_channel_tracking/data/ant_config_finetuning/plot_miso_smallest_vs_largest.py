@@ -8,30 +8,29 @@ import matplotlib.pyplot as plt
 # ==========================================
 # 1. Configuration
 # ==========================================
-# Modify these if your file names use 2.06 GHz instead
 CENTER_FREQ_STR = "38.75"  
 CHANNEL_FREQ_GHZ = 39
 
-TX_DIM = [3, 3]
+TX_DIM = [7, 7]
 RX_DIM = [1, 1]
-N_T = TX_DIM[0] * TX_DIM[1] # 49
+N_T = TX_DIM[0] * TX_DIM[1] # Dynamically calculates 9 or 49
 
 Z0 = 50 
 SNR_dB_Range = np.arange(-4, 12, 2)
-RT_LIST = [1, 2, 3, 9]
+
+# Dynamically set the list to use 1, 2, 3, and the full array size (N_T)
+RT_LIST = [1, 2, 3, N_T]
 
 # --- File Paths ---
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 CHAN_DIR = os.path.join(SCRIPT_DIR, "..", "channel")
 
-Z_FILE_TX = os.path.join(SCRIPT_DIR, "Z_results", f"3x3_UPA_{CENTER_FREQ_STR}GHz_Z.mat")
-EIGEN_FILE_TX = os.path.join(SCRIPT_DIR, "eigen_result", f"3x3_UPA_{CENTER_FREQ_STR}GHz_eigen.mat")
+Z_FILE_TX = os.path.join(SCRIPT_DIR, "Z_results", f"{TX_DIM[0]}x{TX_DIM[1]}_UPA_{CENTER_FREQ_STR}GHz_Z.mat")
+EIGEN_FILE_TX = os.path.join(SCRIPT_DIR, "eigen_result", f"{TX_DIM[0]}x{TX_DIM[1]}_UPA_{CENTER_FREQ_STR}GHz_eigen.mat")
 
-# Adjust the channel file name depending on which script you used to generate the channel
-CHANNEL_FILE = os.path.join(CHAN_DIR, f"channel_data_SC_{CHANNEL_FREQ_GHZ}GHz_3x3Tx_1x1Rx_30000samples.mat")
-if not os.path.exists(CHANNEL_FILE):
-    # Fallback to the SC-prefixed 1,000,000 samples file if the 3k one isn't found
-    CHANNEL_FILE = os.path.join(CHAN_DIR, f"channel_data_SC_{CHANNEL_FREQ_GHZ}GHz_3x3Tx_1x1Rx_3000samples.mat")
+CHANNEL_FILE = os.path.join(CHAN_DIR, f"channel_data_SC_{CHANNEL_FREQ_GHZ}GHz_{TX_DIM[0]}x{TX_DIM[1]}Tx_1x1Rx_30000samples.mat")
+# if not os.path.exists(CHANNEL_FILE):
+#     CHANNEL_FILE = os.path.join(CHAN_DIR, f"channel_data_SC_{CHANNEL_FREQ_GHZ}GHz_{TX_DIM[0]}x{TX_DIM[1]}Tx_1x1Rx_3000samples.mat")
 
 # ==========================================
 # 2. Helper Functions
@@ -75,11 +74,11 @@ def main():
     with h5py.File(CHANNEL_FILE, 'r') as f:
         h_raw = f['H_samples'][()]
         H_complex = h_raw['real'] + 1j * h_raw['imag']
-    H_samples = np.transpose(H_complex, (2, 1, 0)) # Shape: (Samples, 1, 49)
+    H_samples = np.transpose(H_complex, (2, 1, 0)) 
     
     # 3. Project to the effective Physical Channel
     print("Computing Effective H_c...")
-    H_c_all = np.matmul(H_samples, C_T_sqrt) # Shape: (Samples, 1, 49)
+    H_c_all = np.matmul(H_samples, C_T_sqrt) 
     
     # ==========================================
     # 4. RANKING MODES BY RATE (At 10 dB SNR)
@@ -88,7 +87,7 @@ def main():
     single_mode_rates = np.zeros(N_T)
     
     for m in range(N_T):
-        u_m = U_T_full[:, m:m+1] # Single eigenvector
+        u_m = U_T_full[:, m:m+1] 
         H_tilde_m = np.matmul(H_c_all, u_m[None, :, :])
         single_mode_rates[m] = batch_capacity(H_tilde_m, snr_eval)
         
@@ -112,51 +111,65 @@ def main():
         snr_linear = 10**(snr_db / 10)
         
         for rt in RT_LIST:
-            # Smallest eigenvalues (front of U_T_sorted)
+            # Smallest eigenvalues 
             U_small = U_T_full[:, :rt]
             H_small = np.matmul(H_c_all, U_small[None, :, :])
             rates_smallest[rt][i] = batch_capacity(H_small, snr_linear)
             
-            # Largest eigenvalues (end of U_T_sorted)
+            # Largest eigenvalues 
             U_large = U_T_full[:, -rt:]
             H_large = np.matmul(H_c_all, U_large[None, :, :])
             rates_largest[rt][i] = batch_capacity(H_large, snr_linear)
 
     # ==========================================
-    # 6. PLOTTING
+    # 6. PLOTTING (Separated into Two Figures)
     # ==========================================
-    print("Generating Plot...")
-    plt.figure(figsize=(10, 7))
-    
-    colors_small = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728'] # Blues, Oranges, Greens, Reds
-    colors_large = ['#9467bd', '#8c564b', '#e377c2', '#7f7f7f'] # Purples, Browns, Pinks, Grays
-    markers = ['o', 's', '^', 'D']
-    
-    for idx, rt in enumerate(RT_LIST):
-        # Plot Smallest
-        plt.plot(SNR_dB_Range, rates_smallest[rt], 
-                 color=colors_small[idx], marker=markers[idx], linestyle='-',
-                 label=f'Smallest {rt} EVs', linewidth=2.5)
-        # Plot Largest
-        plt.plot(SNR_dB_Range, rates_largest[rt], 
-                 color=colors_large[idx], marker=markers[idx], linestyle='--',
-                 label=f'Largest {rt} EVs', linewidth=2.5, alpha=0.8)
-                 
-    plt.title(f'Achievable Rate vs SNR (MISO {CENTER_FREQ_STR} GHz)\nSmallest vs Largest Eigenvalues', fontsize=15)
-    plt.xlabel('SNR [dB]', fontsize=13)
-    plt.ylabel('Rate [bps/Hz]', fontsize=13)
-    
-    # Legend sorted into two columns for clarity
-    plt.legend(fontsize=11, ncol=2, loc='upper left')
-    plt.grid(True, which='both', linestyle='--', alpha=0.7)
-    
+    print("Generating Plots...")
     output_dir = os.path.join(SCRIPT_DIR, "achievable_rate_plot")
     os.makedirs(output_dir, exist_ok=True)
-    save_path = os.path.join(output_dir, f"MISO_Rate_Small_vs_Large_EVs_{CENTER_FREQ_STR}GHz.png")
     
+    colors = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728']
+    markers = ['o', 's', '^', 'D']
+    
+    # --- Figure 1: Smallest Eigenvalues ---
+    plt.figure(figsize=(8, 6))
+    for idx, rt in enumerate(RT_LIST):
+        label_str = f'Smallest {rt} EVs' if rt != N_T else f'Full Array ({N_T} EVs)'
+        plt.plot(SNR_dB_Range, rates_smallest[rt], 
+                 color=colors[idx], marker=markers[idx], linestyle='-',
+                 label=label_str, linewidth=2.5)
+                 
+    plt.title(f'Achievable Rate vs SNR (MISO {CENTER_FREQ_STR} GHz)\nSmallest Eigenvalues', fontsize=15)
+    plt.xlabel('SNR [dB]', fontsize=13)
+    plt.ylabel('Rate [bps/Hz]', fontsize=13)
+    plt.legend(fontsize=11, loc='upper left')
+    plt.grid(True, which='both', linestyle='--', alpha=0.7)
     plt.tight_layout()
-    plt.savefig(save_path, dpi=300)
-    print(f"Plot successfully saved to:\n{save_path}")
+    
+    save_path_small = os.path.join(output_dir, f"MISO_Rate_Smallest_EVs_{CENTER_FREQ_STR}GHz.png")
+    plt.savefig(save_path_small, dpi=300)
+    plt.close()
+    
+    # --- Figure 2: Largest Eigenvalues ---
+    plt.figure(figsize=(8, 6))
+    for idx, rt in enumerate(RT_LIST):
+        label_str = f'Largest {rt} EVs' if rt != N_T else f'Full Array ({N_T} EVs)'
+        plt.plot(SNR_dB_Range, rates_largest[rt], 
+                 color=colors[idx], marker=markers[idx], linestyle='--',
+                 label=label_str, linewidth=2.5)
+                 
+    plt.title(f'Achievable Rate vs SNR (MISO {CENTER_FREQ_STR} GHz)\nLargest Eigenvalues', fontsize=15)
+    plt.xlabel('SNR [dB]', fontsize=13)
+    plt.ylabel('Rate [bps/Hz]', fontsize=13)
+    plt.legend(fontsize=11, loc='upper left')
+    plt.grid(True, which='both', linestyle='--', alpha=0.7)
+    plt.tight_layout()
+    
+    save_path_large = os.path.join(output_dir, f"MISO_Rate_Largest_EVs_{CENTER_FREQ_STR}GHz.png")
+    plt.savefig(save_path_large, dpi=300)
+    plt.close()
+
+    print(f"Plots successfully saved to:\n1. {save_path_small}\n2. {save_path_large}")
 
 if __name__ == "__main__":
     main()

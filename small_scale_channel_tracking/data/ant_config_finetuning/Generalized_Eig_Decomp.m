@@ -6,7 +6,7 @@ clear;
 % ==========================================
 freqs_GHz = [38.75];
 % freqs_GHz = [2.0625];
-grid_size = [3, 3];  % Currently testing 2x2
+grid_size = [7, 7];  % Currently testing 2x2
 asf = 2;             % Antenna spacing factor
 
 % Input/Output Directories
