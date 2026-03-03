@@ -1,11 +1,11 @@
 %% Generalized_Eig_Decomp_Sweep.m
-clear; clc;
+clear;
 
 % ==========================================
 % 1. Configuration
 % ==========================================
-% freqs_GHz = [38.75];
-freqs_GHz = [2.0625];
+freqs_GHz = [38.75];
+% freqs_GHz = [2.0625];
 grid_size = [7, 7];  % Currently testing 2x2
 asf = 2;             % Antenna spacing factor
 

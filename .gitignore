@@ -12,6 +12,7 @@ plot_Z
 x0_dataset/
 testing_dataset/
 mode_verification/
+impedance_matrix_improved.py
 
 *.mat
 tmp.py
