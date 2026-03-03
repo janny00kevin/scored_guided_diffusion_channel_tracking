@@ -12,7 +12,7 @@ from utils.channel_utils import calculate_coupling_matrix, load_eigenvectors, ba
 # ==========================================
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 
-MODE = 2  # Set to 39 or 2
+MODE = 39  # Set to 39 or 2
 
 if MODE == 39:
     CENTER_FREQ_STR = "38.75"
@@ -39,7 +39,7 @@ Z_FILE_TX = os.path.join(SCRIPT_DIR, "Z_results", f"7x7_UPA_{CENTER_FREQ_STR}GHz
 EIGEN_FILE_TX = os.path.join(SCRIPT_DIR, "eigen_result", f"7x7_UPA_{CENTER_FREQ_STR}GHz_eigen.mat")
 
 # Channel filename for 1x1Rx
-CHANNEL_FILE = os.path.join(CHAN_DIR, f"channel_data_{CHANNEL_FREQ_GHZ}GHz_7x7Tx_1x1Rx_3000samples.mat")
+CHANNEL_FILE = os.path.join(CHAN_DIR, f"channel_data_SC_{CHANNEL_FREQ_GHZ}GHz_7x7Tx_1x1Rx_3000samples.mat")
 
 # Output directory for rate-sorted eigen components
 SORTED_EIGEN_DIR = os.path.join(SCRIPT_DIR, "eigen_result_rate_sorted")
@@ -140,7 +140,13 @@ def main():
             print(f"   SNR {snr:>2} dB: {snr_orders[snr][:10].tolist()}")
     else:
         print(f"   Universal Top 10 Order: {base_order[:10].tolist()}")
-
+        # Use .flatten() to turn [[1.2], [3.4]] into [1.2, 3.4]
+    raw_values = sio.loadmat(EIGEN_FILE_TX)['lambda_sorted'][base_order].flatten()
+    # Now 'val' will be a single float, and this will work:
+    formatted_list = [f"{val:.4f}" for val in raw_values]
+    # print(f"Corresponding eigenvalues (Top 10): {formatted_list}")
+    for i in range(N_T):
+        print(f"{i+1:>2}: Index {base_order[i]+1:>2}, Eigenvalue {raw_values[i]:.4f}")
     # Question 2: Is the required number of modes identical?
     base_req = snr_req_modes[SNR_dB_Range[0]]
     reqs_identical = all(val == base_req for val in snr_req_modes.values())
@@ -151,27 +157,27 @@ def main():
         print(f"   SNR {snr:>2} dB: Requires {snr_req_modes[snr]:>2} modes to hit 90%")
     print("="*50 + "\n")
 
-    # ==========================================
-    # 4. Save the Rate-Sorted Eigen-components
-    # ==========================================
+    # # ==========================================
+    # # 4. Save the Rate-Sorted Eigen-components
+    # # ==========================================
     
-    # We use the order from the highest SNR (10 dB) as our universal sorting standard
-    universal_rate_order = snr_orders[10] 
+    # # We use the order from the highest SNR (10 dB) as our universal sorting standard
+    # universal_rate_order = snr_orders[10] 
 
-    # Load the original `.mat` file so we preserve metadata (freqs, grid_size, etc.)
-    mat_data = sio.loadmat(EIGEN_FILE_TX)
+    # # Load the original `.mat` file so we preserve metadata (freqs, grid_size, etc.)
+    # mat_data = sio.loadmat(EIGEN_FILE_TX)
 
-    # 1. Reorder the Eigenvectors (columns)
-    mat_data['U_T_sorted'] = mat_data['U_T_sorted'][:, universal_rate_order]
+    # # 1. Reorder the Eigenvectors (columns)
+    # mat_data['U_T_sorted'] = mat_data['U_T_sorted'][:, universal_rate_order]
     
-    # 2. Flatten to a strict 1D array, sort, then reshape back to a (49, 1) column vector
-    lambda_flat = mat_data['lambda_sorted'].flatten()
-    mat_data['lambda_sorted'] = lambda_flat[universal_rate_order].reshape(-1, 1)
+    # # 2. Flatten to a strict 1D array, sort, then reshape back to a (49, 1) column vector
+    # lambda_flat = mat_data['lambda_sorted'].flatten()
+    # mat_data['lambda_sorted'] = lambda_flat[universal_rate_order].reshape(-1, 1)
 
-    # Save to the new directory using original filename convention
-    out_filename = f"7x7_UPA_{CENTER_FREQ_STR}GHz_eigen.mat"
-    out_path = os.path.join(SORTED_EIGEN_DIR, out_filename)
-    sio.savemat(out_path, mat_data)
+    # # Save to the new directory using original filename convention
+    # out_filename = f"7x7_UPA_{CENTER_FREQ_STR}GHz_eigen.mat"
+    # out_path = os.path.join(SORTED_EIGEN_DIR, out_filename)
+    # sio.savemat(out_path, mat_data)
     
     print(f"Successfully saved re-sorted components")
 

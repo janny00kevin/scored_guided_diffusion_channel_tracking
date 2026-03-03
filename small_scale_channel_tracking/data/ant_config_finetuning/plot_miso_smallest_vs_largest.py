@@ -19,7 +19,7 @@ Z0 = 50
 SNR_dB_Range = np.arange(-4, 12, 2)
 
 # Dynamically set the list to use 1, 2, 3, and the full array size (N_T)
-RT_LIST = [1, 2, 3, N_T]
+RT_LIST = [20, N_T]
 
 # --- File Paths ---
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -28,7 +28,7 @@ CHAN_DIR = os.path.join(SCRIPT_DIR, "..", "channel")
 Z_FILE_TX = os.path.join(SCRIPT_DIR, "Z_results", f"{TX_DIM[0]}x{TX_DIM[1]}_UPA_{CENTER_FREQ_STR}GHz_Z.mat")
 EIGEN_FILE_TX = os.path.join(SCRIPT_DIR, "eigen_result", f"{TX_DIM[0]}x{TX_DIM[1]}_UPA_{CENTER_FREQ_STR}GHz_eigen.mat")
 
-CHANNEL_FILE = os.path.join(CHAN_DIR, f"channel_data_SC_{CHANNEL_FREQ_GHZ}GHz_{TX_DIM[0]}x{TX_DIM[1]}Tx_1x1Rx_30000samples.mat")
+CHANNEL_FILE = os.path.join(CHAN_DIR, f"channel_data_SC_{CHANNEL_FREQ_GHZ}GHz_{TX_DIM[0]}x{TX_DIM[1]}Tx_1x1Rx_3000samples.mat")
 # if not os.path.exists(CHANNEL_FILE):
 #     CHANNEL_FILE = os.path.join(CHAN_DIR, f"channel_data_SC_{CHANNEL_FREQ_GHZ}GHz_{TX_DIM[0]}x{TX_DIM[1]}Tx_1x1Rx_3000samples.mat")
 
@@ -155,7 +155,7 @@ def main():
     for idx, rt in enumerate(RT_LIST):
         label_str = f'Largest {rt} EVs' if rt != N_T else f'Full Array ({N_T} EVs)'
         plt.plot(SNR_dB_Range, rates_largest[rt], 
-                 color=colors[idx], marker=markers[idx], linestyle='--',
+                 color=colors[idx], marker=markers[idx], linestyle='-',
                  label=label_str, linewidth=2.5)
                  
     plt.title(f'Achievable Rate vs SNR (MISO {CENTER_FREQ_STR} GHz)\nLargest Eigenvalues', fontsize=15)
