@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 CENTER_FREQ_STR = "38.75"  
 CHANNEL_FREQ_GHZ = 39
 
-TX_DIM = [7, 7] # Change to [7, 7] when ready for the big array
+TX_DIM = [7, 7] 
 RX_DIM = [1, 1]
 N_T = TX_DIM[0] * TX_DIM[1] 
 
@@ -66,29 +66,19 @@ def main():
     eig_data = sio.loadmat(EIGEN_FILE_TX)
     U_T_full = eig_data['U_T_sorted']
     
-# 2. Extract Eigenvalues and find indices where |EV| < 1
-    # Using the exact key confirmed from the .mat file
+    # Extract Eigenvalues and find indices where |EV| < 1
     eig_vals = np.abs(eig_data['lambda_sorted'].flatten())
-            
-    # if eig_vals is None:
-    #     print("\nError: Could not find the eigenvalues in your .mat file.")
-    #     print("Available variables in file:", [k for k in eig_data.keys() if not k.startswith('__')])
-    #     print("Please ensure your MATLAB script saves the eigenvalues (e.g., 'lambda_T_sorted').")
-    #     return
         
     valid_indices = np.where(eig_vals < 1.0)[0]
     K_valid = len(valid_indices)
     
     print(f"Total Modes: {N_T}")
     print(f"Modes with |EV| < 1: {K_valid}")
-    print(f"Indices used: {valid_indices.tolist()}")
     
     if K_valid == 0:
-        print("Warning: No eigenvalues are less than 1. Cannot plot the filtered curve.")
-        return
+        print("Warning: No eigenvalues are less than 1. Plotting original vs full only.")
         
-    # Extract only the efficient eigenvectors
-    U_efficient = U_T_full[:, valid_indices]
+    U_efficient = U_T_full[:, valid_indices] if K_valid > 0 else None
     
     # 3. Load the Channel
     print(f"Loading Channel Data from: {os.path.basename(CHANNEL_FILE)}...")
@@ -107,35 +97,46 @@ def main():
     print("Simulating Rates...")
     rates_efficient = np.zeros(len(SNR_dB_Range))
     rates_full = np.zeros(len(SNR_dB_Range))
+    rates_coupling = np.zeros(len(SNR_dB_Range)) # NEW: H_c only
     
     for i, snr_db in enumerate(SNR_dB_Range):
         snr_linear = 10**(snr_db / 10)
         
-        # Rate for modes with EV < 1
-        H_eff = np.matmul(H_c_all, U_efficient[None, :, :])
-        rates_efficient[i] = batch_capacity(H_eff, snr_linear)
+        # 1. Rate for H_c directly (Physical Coupling Rate)
+        rates_coupling[i] = batch_capacity(H_c_all, snr_linear)
         
-        # Rate for all modes (Full Array)
+        # 2. Rate for all modes (Full Modal Domain)
         H_full = np.matmul(H_c_all, U_T_full[None, :, :])
         rates_full[i] = batch_capacity(H_full, snr_linear)
+
+        # 3. Rate for modes with EV < 1
+        if U_efficient is not None:
+            H_eff = np.matmul(H_c_all, U_efficient[None, :, :])
+            rates_efficient[i] = batch_capacity(H_eff, snr_linear)
 
     # ==========================================
     # 6. PLOTTING
     # ==========================================
     print("Generating Plot...")
-    plt.figure(figsize=(8, 6))
+    plt.figure(figsize=(9, 7))
     
-    # Plot Efficient Modes
-    plt.plot(SNR_dB_Range, rates_efficient, 
-             color='#1f77b4', marker='o', linestyle='-',
-             label=f'|$\lambda$| < 1: {K_valid} Modes', linewidth=2.5)
-             
-    # Plot Full Array
+    # Plot R_coupling (Original Physical Channel)
+    plt.plot(SNR_dB_Range, rates_coupling, 
+             color='black', marker='D', linestyle='-',
+             label=r'$R_{\mathrm{coupling}}$ ($\mathbf{H}_c$)', linewidth=2.0)
+
+    # Plot Full Array Modal Domain
     plt.plot(SNR_dB_Range, rates_full, 
              color='#d62728', marker='s', linestyle='--',
-             label=f'Full {N_T} Modes', linewidth=2.5)
+             label=f'Full Modal Domain ({N_T} Modes)', linewidth=2.5)
+
+    # Plot Efficient Modes
+    if U_efficient is not None:
+        plt.plot(SNR_dB_Range, rates_efficient, 
+                 color='#1f77b4', marker='o', linestyle='-',
+                 label=f'|$\lambda$| < 1: {K_valid} Modes', linewidth=2.5)
              
-    plt.title(f'Achievable Rate vs SNR (MISO {CENTER_FREQ_STR} GHz)\nEfficient Modes vs Full Array', fontsize=15)
+    plt.title(f'MISO Achievable Rate ({CENTER_FREQ_STR} GHz)\nPhysical Coupling vs Modal Domain', fontsize=15)
     plt.xlabel('SNR [dB]', fontsize=13)
     plt.ylabel('Rate [bps/Hz]', fontsize=13)
     plt.legend(fontsize=11, loc='upper left')

@@ -1,5 +1,5 @@
 %% Generalized_Eig_Decomp_Sweep.m
-clear;
+clear; clc;
 
 % ==========================================
 % 1. Configuration

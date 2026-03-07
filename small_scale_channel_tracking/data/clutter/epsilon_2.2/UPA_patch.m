@@ -3,8 +3,8 @@
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Configurations
-% targetFreq = 38.75e9;
-targetFreq = 2.0625e9;
+targetFreq = 38.75e9;
+% targetFreq = 2.0625e9;
 asf = 2;  % antenna_space = lambda / asf (e.g., lambda/2)
 n = 7;
 grid_size = [n n]; % [Rows, Columns] 
@@ -18,12 +18,10 @@ if ~exist('plot_antenna_layout', 'dir'), mkdir('plot_antenna_layout'); end
 addpath('single_antenna');
 if targetFreq > 30e9
     p_element = createPatchAntenna_39GHz();
-    disp('Using 39 GHz patch as the base element for UPA design.');
 elseif targetFreq > 20e9
     p_element = createPatchAntenna_28GHz();
 else
     p_element = createPatchAntenna_2GHz();
-    disp('Using 2 GHz patch as the base element for UPA design.');
 end
 
 % 2. Define Target Frequency and Physics
@@ -43,52 +41,41 @@ upa.Size = grid_size; % Set [Row, Col]
 upa.RowSpacing = lambda / asf;    % Spacing along Y-axis usually
 upa.ColumnSpacing = lambda / asf; % Spacing along X-axis usually
 
-% % A. Resize Ground Plane LENGTH (X-Axis)
-% num_rows = grid_size(2);
-% margin_L = (p_element.GroundPlaneLength - p_element.Length) / 2;
-% boardLen = (lambda/asf * (num_rows-1) + p_element.Length/asf*2 + margin_L*2) / num_rows;
-% % B. Resize Ground Plane WIDTH (Y-Axis)
-% num_cols = grid_size(1);
-% margin_W = (p_element.GroundPlaneWidth - p_element.Width) / 2;
-% boardWid = (lambda/asf * (num_cols-1) + p_element.Width/asf*2 + margin_W*2) / num_cols;
-% A perfectly tiled contiguous board with zero overlap
-boardLen = upa.RowSpacing;
-boardWid = upa.ColumnSpacing;
+% A. Resize Ground Plane LENGTH (X-Axis)
+num_rows = grid_size(2);
+margin_L = (p_element.GroundPlaneLength - p_element.Length) / 2;
+boardLen = (lambda/asf * (num_rows-1) + p_element.Length/asf*2 + margin_L*2) / num_rows;
+% B. Resize Ground Plane WIDTH (Y-Axis)
+num_cols = grid_size(1);
+margin_W = (p_element.GroundPlaneWidth - p_element.Width) / 2;
+boardWid = (lambda/asf * (num_cols-1) + p_element.Width/asf*2 + margin_W*2) / num_cols;
 % C. Apply to the Shared Element
 upa.Element.Substrate.Length = boardLen;
 upa.Element.GroundPlaneLength = boardLen;
 upa.Element.Substrate.Width = boardWid;
 upa.Element.GroundPlaneWidth = boardWid;
 
-fprintf("RowSpacing=%.6g  ColSpacing=%.6g\n", upa.RowSpacing, upa.ColumnSpacing)
-fprintf("boardWid =%.6g  boardLen =%.6g\n", boardWid, boardLen)
-
-% Save Layout to verify spacing
-if ~exist('plot_antenna_layout', 'dir'), mkdir('plot_antenna_layout'); end
-fig = figure('visible', 'off');
-show(upa);
-title(['UPA Layout (' num2str(grid_size(1)) 'x' num2str(grid_size(2)) ...
-       ', Spacing = \lambda/' num2str(asf) ' = ' ...
-       num2str(upa.RowSpacing*1000, '%.1f') ' mm)']);
-view(45, 45); % Angled view to see the planar structure better
-filename = sprintf('plot_antenna_layout/%dx%dUPA_layout_%.2fGHz.png', ...
-                   grid_size(1), grid_size(2), targetFreq/1e9);
-saveas(fig, filename);
-close(fig);
+% % Save Layout to verify spacing
+% if ~exist('plot_antenna_layout', 'dir'), mkdir('plot_antenna_layout'); end
+% fig = figure('visible', 'off');
+% show(upa);
+% title(['UPA Layout (' num2str(grid_size(1)) 'x' num2str(grid_size(2)) ...
+%        ', Spacing = \lambda/' num2str(asf) ' = ' ...
+%        num2str(upa.RowSpacing*1000, '%.1f') ' mm)']);
+% view(45, 45); % Angled view to see the planar structure better
+% filename = sprintf('plot_antenna_layout/%dx%dUPA_layout_%.2fGHz.png', ...
+%                    grid_size(1), grid_size(2), targetFreq/1e9);
+% saveas(fig, filename);
+% close(fig);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Define a reasonable mesh size
-meshSize = lambda / 6; 
+meshSize = lambda / 10; 
 mesh(upa, 'MaxEdgeLength', meshSize);
-% fprintf("Triangles: %d\n", size(m.Triangles,2));
-% fprintf("Tets:      %d\n", size(m.Tetrahedra,2));
-% fprintf("MaxEdge:   %.6g m\n", m.MaxEdgeLength);
-% fprintf("MinEdge:   %.6g m\n", m.MinEdgeLength);
 
 % 4. Calculate S-parameters
 disp(['Calculating S-parameters for UPA at ', num2str(targetFreq/1e9), ' GHz...']);
 tic;
-disp(datetime('now'))
 S_obj = sparameters(upa, targetFreq);
 
 % 5. Convert S-parameters to Z-parameters (Impedance Matrix)

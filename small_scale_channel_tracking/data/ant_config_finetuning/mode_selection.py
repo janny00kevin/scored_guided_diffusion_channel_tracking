@@ -16,7 +16,7 @@ SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 # Set to 'import' to use your .mat files, or 'rayleigh' for i.i.d. Gaussian
 CHANNEL_MODE = 'rayleigh' 
 
-MODE = 39  # Set to 39 or 2
+MODE = 2  # Set to 39 or 2
 
 if MODE == 39:
     CENTER_FREQ_STR = "38.75"
@@ -96,7 +96,7 @@ def main():
     # ==========================================
     print("\nSorted Mode List based on Achievable Rate:")
     for i in range(N_T):
-        print(f"{i+1:>2}: Index {base_order[i]+1:>2}, Eigenvalue {raw_values[i]:.4f}")
+        print(f"{i+1:>2}: Index {base_order[i]+1:>2}, Eigenvalue {abs(raw_values[i]):.4f}")
 
 if __name__ == "__main__":
     main()

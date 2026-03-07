@@ -6,7 +6,8 @@ import os
 # ==========================================
 # 1. Configuration
 # ==========================================
-FREQ_GHZ = 38.75 
+# FREQ_GHZ = 38.75 
+FREQ_GHZ = 2.06
 GRID_SIZE = [7, 7]
 
 # Paths relative to the script location
@@ -63,15 +64,15 @@ def main():
     plt.ylabel('Absolute Value $|\lambda|$', fontsize=12)
     
     # Set Y-axis range from 0 to 10
-    plt.ylim(0, 10) 
+    plt.ylim(0, 1.1) 
     
     # Custom ticks for clarity
-    plt.yticks(np.arange(0, 11, 1))
+    plt.yticks(np.arange(0, 1.2, 0.1))
     plt.grid(True, axis='y', linestyle=':', alpha=0.6)
     plt.legend()
     
     # Save output to achievable_rate_plot/
-    save_name = f"Eigenvalue_Magnitude_Linear_0to10_{FREQ_GHZ}GHz.png"
+    save_name = f"Eigenvalue_Magnitude_{FREQ_GHZ}GHz.png"
     save_path = os.path.join(OUTPUT_DIR, save_name)
     plt.savefig(save_path, dpi=300)
     plt.close()

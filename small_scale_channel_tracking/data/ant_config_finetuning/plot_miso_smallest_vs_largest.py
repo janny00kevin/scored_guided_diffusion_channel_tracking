@@ -8,12 +8,14 @@ import matplotlib.pyplot as plt
 # ==========================================
 # 1. Configuration
 # ==========================================
-CENTER_FREQ_STR = "38.75"  
+CENTER_FREQ_STR = "38.75"
 CHANNEL_FREQ_GHZ = 39
+# CENTER_FREQ_STR = "2.06"
+# CHANNEL_FREQ_GHZ = 2
 
 # --- CHANNEL MODE SELECTION ---
-# Set to 'import' to use your .mat files, or 'rayleigh' for i.i.d. Gaussian
-CHANNEL_MODE = 'rayleigh'  
+# Set to 'UMa' to use your .mat files, or 'rayleigh' for i.i.d. Gaussian
+CHANNEL_MODE = 'UMa'  
 
 TX_DIM = [7, 7]
 RX_DIM = [1, 1]
@@ -21,7 +23,7 @@ N_T = TX_DIM[0] * TX_DIM[1]
 
 Z0 = 50 
 SNR_dB_Range = np.arange(-4, 12, 2)
-RT_LIST = [41, N_T]
+RT_LIST = [39, N_T]
 
 # --- File Paths ---
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -72,7 +74,7 @@ def main():
     U_T_full = eig_data['U_T_sorted']
     
     # 2. Channel Selection Logic
-    if CHANNEL_MODE == 'import':
+    if CHANNEL_MODE == 'UMa':
         print(f"Loading Channel Data from: {os.path.basename(CHANNEL_FILE)}...")
         if not os.path.exists(CHANNEL_FILE):
             print(f"[Error] Channel file not found: {CHANNEL_FILE}")
@@ -118,12 +120,16 @@ def main():
     # ==========================================
     # 5. SWEEP SNR FOR SMALLEST vs LARGEST
     # ==========================================
-    print("Simulating Rate for Smallest and Largest RTs...")
+    print("Simulating Rate for Original, Smallest, and Largest RTs...")
     rates_smallest = {rt: np.zeros(len(SNR_dB_Range)) for rt in RT_LIST}
     rates_largest = {rt: np.zeros(len(SNR_dB_Range)) for rt in RT_LIST}
+    rates_original = np.zeros(len(SNR_dB_Range)) # NEW: Original Rate without Modal Domain
     
     for i, snr_db in enumerate(SNR_dB_Range):
         snr_linear = 10**(snr_db / 10)
+        
+        # Original Coupled Channel (No Modal Domain)
+        rates_original[i] = batch_capacity(H_c_all, snr_linear)
         
         for rt in RT_LIST:
             # Smallest eigenvalues (often best matched/resonant)
@@ -145,7 +151,7 @@ def main():
     
     colors = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728']
     markers = ['o', 's', '^', 'D']
-    chan_label = "Rayleigh" if CHANNEL_MODE == 'rayleigh' else "Imported"
+    chan_label = "Rayleigh" if CHANNEL_MODE == 'rayleigh' else "UMa small scale"
     
     # --- Figure 1: Smallest Eigenvalues ---
     plt.figure(figsize=(8, 6))
@@ -155,37 +161,60 @@ def main():
                  color=colors[idx], marker=markers[idx], linestyle='-',
                  label=label_str, linewidth=2.5)
                  
-    plt.title(f'Rate vs SNR ({chan_label} {CENTER_FREQ_STR} GHz)\nSmallest Eigenvalues', fontsize=14)
-    plt.xlabel('SNR [dB]', fontsize=12)
-    plt.ylabel('Rate [bps/Hz]', fontsize=12)
-    plt.legend(fontsize=10, loc='upper left')
-    plt.grid(True, which='both', linestyle='--', alpha=0.7)
-    plt.tight_layout()
+    # plt.title(f'Rate vs SNR ({chan_label} {CENTER_FREQ_STR} GHz)\nSmallest Eigenvalues', fontsize=14)
+    # plt.xlabel('SNR [dB]', fontsize=12)
+    # plt.ylabel('Rate [bps/Hz]', fontsize=12)
+    # plt.legend(fontsize=10, loc='upper left')
+    # plt.grid(True, which='both', linestyle='--', alpha=0.7)
+    # plt.tight_layout()
     
-    save_path_small = os.path.join(output_dir, f"MISO_Rate_{CHANNEL_MODE}_Smallest_{CENTER_FREQ_STR}GHz.png")
-    plt.savefig(save_path_small, dpi=300)
-    plt.close()
+    # save_path_small = os.path.join(output_dir, f"MISO_Rate_{CHANNEL_MODE}_Smallest_{CENTER_FREQ_STR}GHz.png")
+    # # plt.savefig(save_path_small, dpi=300)
+    # plt.close()
     
     # --- Figure 2: Largest Eigenvalues ---
     plt.figure(figsize=(8, 6))
     for idx, rt in enumerate(RT_LIST):
-        label_str = f'Largest {rt} EVs' if rt != N_T else f'Full Array ({N_T} EVs)'
+        label_str = f'Largest {rt} EVs' if rt != N_T else f'Full {N_T} EVs'
         plt.plot(SNR_dB_Range, rates_largest[rt], 
                  color=colors[idx], marker=markers[idx], linestyle='-',
                  label=label_str, linewidth=2.5)
                  
-    plt.title(f'Rate vs SNR ({chan_label} {CENTER_FREQ_STR} GHz)\nLargest Eigenvalues', fontsize=14)
+    # plt.title(f'Rate vs SNR ({chan_label} {CENTER_FREQ_STR} GHz)\nLargest Eigenvalues', fontsize=14)
+    # plt.xlabel('SNR [dB]', fontsize=12)
+    # plt.ylabel('Rate [bps/Hz]', fontsize=12)
+    # plt.legend(fontsize=10, loc='upper left')
+    # plt.grid(True, which='both', linestyle='--', alpha=0.7)
+    # plt.tight_layout()
+    
+    # save_path_large = os.path.join(output_dir, f"MISO_Rate_{CHANNEL_MODE}_Largest_{CENTER_FREQ_STR}GHz.png")
+    # # plt.savefig(save_path_large, dpi=300)
+    # plt.close()
+
+    # --- Figure 3: Combined 4 Curves (NEW) ---
+    plt.figure(figsize=(8, 6))
+    
+    # 1. Original (Coupled Physical Channel)
+    plt.plot(SNR_dB_Range, rates_original, color='m', marker='o', linestyle='-', label=r'$R_{\mathrm{coupling}} (H_c)$', linewidth=2)
+    # 2. N_T EVs (Full Modal Domain)
+    plt.plot(SNR_dB_Range, rates_smallest[N_T], color='b', marker='s', linestyle='--', label=f'All {N_T} EVs', linewidth=2)
+    # 3. Smallest 20
+    plt.plot(SNR_dB_Range, rates_smallest[20], color='g', marker='^', linestyle='--', label='Smallest 20 EVs', linewidth=2)
+    # 4. Largest 20
+    plt.plot(SNR_dB_Range, rates_largest[20], color='r', marker='D', linestyle='--', label='Largest 20 EVs', linewidth=2)
+
+    plt.title(f'Rate vs SNR ({chan_label} {CENTER_FREQ_STR} GHz)\nCoupling vs Modal Domain', fontsize=14)
     plt.xlabel('SNR [dB]', fontsize=12)
     plt.ylabel('Rate [bps/Hz]', fontsize=12)
     plt.legend(fontsize=10, loc='upper left')
     plt.grid(True, which='both', linestyle='--', alpha=0.7)
     plt.tight_layout()
     
-    save_path_large = os.path.join(output_dir, f"MISO_Rate_{CHANNEL_MODE}_Largest_{CENTER_FREQ_STR}GHz.png")
-    plt.savefig(save_path_large, dpi=300)
+    save_path_combined = os.path.join(output_dir, f"MISO_Rate_{CHANNEL_MODE}_4Curves_{CENTER_FREQ_STR}GHz.png")
+    plt.savefig(save_path_combined, dpi=300)
     plt.close()
 
-    print(f"Plots successfully saved to:\n1. {save_path_small}\n2. {save_path_large}")
+    # print(f"Plots successfully saved to:\n1. {save_path_small}\n2. {save_path_large}\n3. {save_path_combined}")
 
 if __name__ == "__main__":
     main()

@@ -9,12 +9,12 @@ function p = createPatchAntenna_2GHz()
     
     % Object Construction
     p = patchMicrostrip;
-    p.Length = 0.03853;        % 38.57 mm (Tuned)
-    p.Width = 0.0442;          % 44.2 mm 
+    p.Length = 0.0344;    
+    p.Width = 0.0442;  
     p.Height = height;
     p.Substrate = dielectric('FR4');
     p.Substrate.EpsilonR = epsilonR;
-    p.GroundPlaneLength = 0.1455;
-    p.GroundPlaneWidth = 0.1455;
-    p.FeedOffset = [0.0104 0];
+    p.GroundPlaneLength = 0.0701;
+    p.GroundPlaneWidth = 0.0799;
+    p.FeedOffset = [0.0058 0];
 end

@@ -13,6 +13,7 @@ x0_dataset/
 testing_dataset/
 mode_verification/
 impedance_matrix_improved.py
+HFSS/
 
 *.mat
 tmp.py

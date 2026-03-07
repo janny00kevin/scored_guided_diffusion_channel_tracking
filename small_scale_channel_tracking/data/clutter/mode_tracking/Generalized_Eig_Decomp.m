@@ -1,9 +1,11 @@
 %% Generalized_Eig_Decomp_Sweep.m
-clear;
+clear; clc;
 
 % ==========================================
 % 1. Configuration
 % ==========================================
+% freqs_GHz = [38.65, 38.70, 38.75, 38.80, 38.85]; % The 5 points you simulated
+% freqs_GHz = [2.0125, 2.0375, 2.0625, 2.0875, 2.1125];
 % freqs_GHz = [38.75];
 freqs_GHz = [2.0625];
 grid_size = [7, 7];  % Currently testing 2x2
