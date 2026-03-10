@@ -10,7 +10,7 @@ SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(os.path.join(SCRIPT_DIR, "..")) 
 
 # Import the helper function from your utils
-from mode_selection.utils.channel_utils import calculate_coupling_matrix
+from utils.channel_utils import calculate_coupling_matrix
 
 # ==========================================
 # 1. Configuration

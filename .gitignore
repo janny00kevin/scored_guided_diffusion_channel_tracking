@@ -13,10 +13,20 @@ x0_dataset/
 testing_dataset/
 mode_verification/
 impedance_matrix_improved.py
-HFSS/
 
 *.mat
 tmp.py
 tmp.m
 logs
 .vscode/
+
+small_scale_channel_tracking/data/HFSS/12GHz_patch.aedtresults
+small_scale_channel_tracking/data/HFSS/AnsysEM_Backup
+small_scale_channel_tracking/data/HFSS/RingAnt&ProbeBLC.aedtresults
+small_scale_channel_tracking/data/HFSS/Z_result/.12GHz_patch_8_8.tab.swp
+small_scale_channel_tracking/data/HFSS/Z_result/12GHz_patch_8_8.tab
+*.aedt
+*.lock
+*.auto
+*.pt
+

@@ -5,8 +5,8 @@ addpath('TS38901');
 rng(0);
 
 % --- 1. Configuration ---
-f_c = 2.0625;  % 2.0625, 28, or 38.75 GHz
-nTxxy = [7 7];
+f_c = 12.45;  % 2.0625, 28, or 38.75 GHz
+nTxxy = [8 8];
 nRxxy = [1 1];
 num_samples = 3000;
 
@@ -15,7 +15,7 @@ loc_BSs = [0; 0; 20000];
 loc_UTs = [0; 0; 0];     % set distance between BSs and UT to be around 680 m in 2D [min 35 m in 2D]
 ori_BSs = [1 0 0; 0 1 0; 0 0 -1];
 ori_UTs = [1 0 0; 0 1 0; 0 0 1];
-f_arr = [2 0]; % UPA n UPA
+f_arr = [2 0]; % UPA n single antenna
 f_LOSProb = 'LOS';
 Tx_d_arr = [0.5 0.5]; % antenna spacing in wavelengths
 Rx_d_arr = [0.5 0.5];
