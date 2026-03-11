@@ -2,7 +2,7 @@ import os
 import re
 import numpy as np
 import scipy.linalg as la
-import torch
+import scipy.io as sio
 
 # ==========================================
 # 1. Configuration
@@ -115,19 +115,20 @@ def main():
         U_T_sorted = U_norm[:, sort_idx]
         
         # ==========================================
-        # 5. Save Results to PyTorch .pt
+        # 5. Save Results to MATLAB .mat
         # ==========================================
-        out_name = f"{GRID_SIZE[0]}x{GRID_SIZE[1]}_UPA_{freq_ghz:.2f}GHz_eigen.pt"
+        # Change the extension to .mat
+        out_name = f"{GRID_SIZE[0]}x{GRID_SIZE[1]}_UPA_{freq_ghz:.0f}GHz_eigen.mat"
         save_path = os.path.join(OUTPUT_DIR, out_name)
         
-        torch.save({
-            'U_T_sorted': torch.from_numpy(U_T_sorted),
-            'lambda_sorted': torch.from_numpy(lambda_sorted),
-            'freqs_GHz': torch.tensor([freq_ghz], dtype=torch.float64),
-            'grid_size': torch.tensor(GRID_SIZE, dtype=torch.int64),
-            'Z_matrix': torch.from_numpy(Z_matrix)
-        }, save_path)
-        
+        # Save dictionary directly using scipy.io
+        sio.savemat(save_path, {
+            'U_T_sorted': U_T_sorted,
+            'lambda_sorted': lambda_sorted,
+            'freqs_GHz': np.array([freq_ghz], dtype=np.float64),
+            'grid_size': np.array(GRID_SIZE, dtype=np.int64),
+            'Z_matrix': Z_matrix
+        })
         print(f" -> Saved to: {out_name}")
 
     print("\n--- GEVD Script Complete ---")

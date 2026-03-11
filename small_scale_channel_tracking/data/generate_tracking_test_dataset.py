@@ -10,26 +10,26 @@ import sys
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(os.path.join(SCRIPT_DIR, "..")) 
 
-from mode_selection.utils.channel_utils import calculate_coupling_matrix
+from utils.channel_utils import calculate_coupling_matrix
 
 # ==========================================
 # 1. Configuration
 # ==========================================
-FREQ_GHZ = 39
-TX_DIM = [7, 7]
+FREQ_GHZ = 12
+TX_DIM = [8, 8]
 RX_DIM = [1, 1]
-R_T = 5
+R_T = 38
 NUM_TEST_SAMPLES = 3000
 SNR_LEVELS = [-4, -2, 0, 2, 4, 6, 8, 10]
 
 # Tracking Physics Parameters
 RHO = 0.900        # Temporal correlation (velocity dependent)
-NUM_PILOTS = 5     # T >= r_T
+NUM_PILOTS = R_T   # T >= r_T
 
 # Input Paths
 CHANNEL_FILE = os.path.join(SCRIPT_DIR, "channel", f"channel_data_SC_{FREQ_GHZ}GHz_{TX_DIM[0]}x{TX_DIM[1]}Tx_{RX_DIM[0]}x{RX_DIM[1]}Rx_{NUM_TEST_SAMPLES}samples.mat")
-Z_FILE_TX = os.path.join(SCRIPT_DIR, "mode_selection", "Z_results", f"{TX_DIM[0]}x{TX_DIM[1]}_UPA_38.75GHz_Z.mat")
-EIGEN_FILE_TX = os.path.join(SCRIPT_DIR, "mode_selection", "eigen_result", f"{TX_DIM[0]}x{TX_DIM[1]}_UPA_38.75GHz_eigen.mat")
+Z_FILE_TX = os.path.join(SCRIPT_DIR, "HFSS", "Z_result", f"{TX_DIM[0]}x{TX_DIM[1]}_UPA_{FREQ_GHZ}GHz_Z.mat")
+EIGEN_FILE_TX = os.path.join(SCRIPT_DIR, "HFSS", "eigen_result", f"{TX_DIM[0]}x{TX_DIM[1]}_UPA_{FREQ_GHZ}GHz_eigen.mat")
 
 # Output Paths
 OUTPUT_DIR = os.path.join(SCRIPT_DIR, "testing_dataset")
