@@ -8,7 +8,7 @@ rng(0);
 f_c = 12.45;  % 2.0625, 28, or 38.75 GHz
 nTxxy = [8 8];
 nRxxy = [1 1];
-num_samples = 3000;
+num_samples = 1000000;
 
 % General setting for channel generation
 loc_BSs = [0; 0; 20000];

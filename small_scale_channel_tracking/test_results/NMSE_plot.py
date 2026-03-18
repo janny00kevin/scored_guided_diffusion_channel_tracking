@@ -6,12 +6,14 @@ import numpy as np
 # =============================
 # 1. Configuration
 # =============================
+FREQ_GHZ = 12
+RHO = 0.1034
 
 # Load .mat files to plot
 FILES = {
-    "Kalman Filter": "NMSE_Baseline_Kalman_Filter.mat",
+    "Kalman Filter": f"NMSE_Baseline_Kalman_Filter_{FREQ_GHZ}GHz_rho{RHO:.3f}.mat",
     # Once you finish the DDIM testing script, you can simply uncomment and add its .mat file here:
-    "DDIM Tracker": "NMSE_Tracker_DDIM_39GHz.mat", 
+    "DDIM Tracker": f"NMSE_Tracker_DDIM_{FREQ_GHZ}GHz_rho{RHO:.3f}.mat", 
 }
 
 STYLES = {
@@ -137,7 +139,7 @@ def main():
         metric_type="x0",
         title="Channel Tracking Performance",
         ylabel="Tracking NMSE (dB)",
-        save_name_base="NMSE_Tracker_X0",
+        save_name_base=f"NMSE_Tracker_{FREQ_GHZ}GHz_rho{RHO:.3f}",
         script_dir=script_dir
     )
 

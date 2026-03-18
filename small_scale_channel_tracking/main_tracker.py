@@ -9,10 +9,11 @@ RUN_ID = 2
 MODE = {1: 'train', 2: 'test'}.get(RUN_ID, 'train')
 
 # Scenario Configs
-FREQ_GHZ = 39
-TX_DIM = [7, 7]
+FREQ_GHZ = 12
+TX_DIM = [8, 8]
 RX_DIM = [1, 1]
-R_T = 5
+RHO = 0.1034
+R_T = 38
 NUM_SAMPLES = 1000000
 CUDA = 0
 
@@ -22,7 +23,7 @@ TRAIN_BATCH_SIZE = 4096
 LR = 1e-3
 MODEL_TYPE = 'mlp'
 VAL_SPLIT = 0.1
-PATIENCE = 15
+PATIENCE = 1
 
 # Diffusion Process Settings
 BETA_MIN = 1e-4
@@ -56,18 +57,15 @@ if MODE == 'train':
     from train_tracker import train_latent_epsnet_tracker
 
     # Construct the path to the npy file generated earlier
-    DATASET_PATH = os.path.join(script_dir, "data", "x0_dataset", 
-                                f"x0_{FREQ_GHZ}GHz_{TX_DIM[0]}x{TX_DIM[1]}Tx_{RX_DIM[0]}x{RX_DIM[1]}Rx_{NUM_SAMPLES}samples_rT{R_T}.npy")
+    DATASET_PATH = os.path.join(script_dir, "data", "training_testing_dataset", 
+                                f"x0_{FREQ_GHZ}GHz_{TX_DIM[0]}x{TX_DIM[1]}Tx_{RX_DIM[0]}x{RX_DIM[1]}Rx_{NUM_SAMPLES}samples_rT{R_T}.pt")
 
     print(f'[Info] Loading dataset from:\n  {DATASET_PATH}')
-    x0_complex = np.load(DATASET_PATH) # Expected shape: (1000000, 5)
+    x0_complex = torch.load(DATASET_PATH) # Expected shape: (1000000, 38)
 
     # Separate real and imaginary components.
-    # The new shape will be (1000000, 10), acting as the raw features for the MLP
-    x0_real = np.concatenate([np.real(x0_complex), np.imag(x0_complex)], axis=-1)
-    
-    # Push data to PyTorch Tensor format
-    x0_tensor = torch.tensor(x0_real, dtype=torch.float32)
+    # The new shape will be (1000000, 76), acting as the raw features for the MLP
+    x0_tensor = torch.cat([x0_complex.real, x0_complex.imag], dim=-1).float()
 
     print(f'[Info] Input feature dimensions: {x0_tensor.shape[1]}')
     print('[Info] Training tracking epsilon net...')
@@ -113,7 +111,7 @@ elif MODE == 'test':
     
     # 2. Load Testing Data
     # Ensure NUM_TEST_SAMPLES = 3000 at the top of your file
-    dataset = get_tracking_testing_dataset(script_dir, NUM_TEST_SAMPLES)
+    dataset = get_tracking_testing_dataset(script_dir, NUM_TEST_SAMPLES, RHO, FREQ_GHZ)
     config = dataset["config"]
     rho = config["rho"]
     
@@ -174,7 +172,7 @@ elif MODE == 'test':
     print("="*60 + "\n")
     
     # 5. Save Results
-    res_filename = f"NMSE_Tracker_DDIM_{FREQ_GHZ}GHz.mat"
+    res_filename = f"NMSE_Tracker_DDIM_{FREQ_GHZ}GHz_rho{RHO:.3f}.mat"
     res_path = os.path.join(script_dir, "test_results", "NMSE_raw_mats")
     os.makedirs(res_path, exist_ok=True)
     
