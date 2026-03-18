@@ -4,6 +4,7 @@ from scipy.linalg import sqrtm
 import h5py
 import os
 import sys
+import torch
 
 # Add the project root to the path so we can import from mode_selection
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -28,11 +29,11 @@ Z_FILE_TX = os.path.join(DATA_DIR, "HFSS", "Z_result", f"{TX_DIM[0]}x{TX_DIM[1]}
 EIGEN_FILE_TX = os.path.join(DATA_DIR, "HFSS", "eigen_result", f"{TX_DIM[0]}x{TX_DIM[1]}_UPA_{int(FREQ_GHZ)}GHz_eigen.mat")
 
 # Output Directory & File setup
-OUTPUT_DIR = os.path.join(DATA_DIR, "x0_dataset")
+OUTPUT_DIR = os.path.join(DATA_DIR, "training_testing_dataset")
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
 # Appending size info to the filename
-OUTPUT_FILENAME = f"x0_{int(FREQ_GHZ)}GHz_{TX_DIM[0]}x{TX_DIM[1]}Tx_{RX_DIM[0]}x{RX_DIM[1]}Rx_{NUM_SAMPLES}samples_rT{R_T}.npy"
+OUTPUT_FILENAME = f"x0_{int(FREQ_GHZ)}GHz_{TX_DIM[0]}x{TX_DIM[1]}Tx_{RX_DIM[0]}x{RX_DIM[1]}Rx_{NUM_SAMPLES}samples_rT{R_T}.pt"
 OUTPUT_FILE = os.path.join(OUTPUT_DIR, OUTPUT_FILENAME)
 
 # ==========================================
@@ -70,9 +71,12 @@ def main():
     # Squeeze the 1x38 matrix into a flat length-38 vector per sample
     x_0 = np.squeeze(H_tilde) # Shape: (1000000, 38)
     
-    # 5. Save the Dataset
-    print(f"Saving dataset... Shape: {x_0.shape}, Type: {x_0.dtype}")
-    np.save(OUTPUT_FILE, x_0)
+# 5. Save the Dataset
+    x_0_tensor = torch.tensor(x_0, dtype=torch.complex64) # <--- Convert to PyTorch tensor
+    print(f"Saving dataset... Shape: {x_0_tensor.shape}, Type: {x_0_tensor.dtype}")
+    
+    # Save using torch instead of numpy
+    torch.save(x_0_tensor, OUTPUT_FILE)
     print(f"Done! x_0 dataset saved to:\n{OUTPUT_FILE}")
 
 if __name__ == "__main__":

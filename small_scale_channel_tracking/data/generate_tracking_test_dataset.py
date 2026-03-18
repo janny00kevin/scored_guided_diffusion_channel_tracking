@@ -23,7 +23,7 @@ NUM_TEST_SAMPLES = 3000
 SNR_LEVELS = [-4, -2, 0, 2, 4, 6, 8, 10]
 
 # Tracking Physics Parameters
-RHO = 0.900        # Temporal correlation (velocity dependent)
+RHO = 0.1034       # Temporal correlation (velocity dependent)
 NUM_PILOTS = R_T   # T >= r_T
 
 # Input Paths
@@ -32,8 +32,8 @@ Z_FILE_TX = os.path.join(SCRIPT_DIR, "HFSS", "Z_result", f"{TX_DIM[0]}x{TX_DIM[1
 EIGEN_FILE_TX = os.path.join(SCRIPT_DIR, "HFSS", "eigen_result", f"{TX_DIM[0]}x{TX_DIM[1]}_UPA_{FREQ_GHZ}GHz_eigen.mat")
 
 # Output Paths
-OUTPUT_DIR = os.path.join(SCRIPT_DIR, "testing_dataset")
-OUTPUT_FILE = os.path.join(OUTPUT_DIR, f"tracking_test_data_{NUM_TEST_SAMPLES}samples.pt")
+OUTPUT_DIR = os.path.join(SCRIPT_DIR, "training_testing_dataset")
+OUTPUT_FILE = os.path.join(OUTPUT_DIR, f"tracking_test_data_rho{RHO:.3f}_{FREQ_GHZ}GHz_{NUM_TEST_SAMPLES}samples.pt")
 
 def main():
     print(f"--- Generating Common Tracking Test Dataset ({FREQ_GHZ} GHz, {NUM_TEST_SAMPLES} Samples) ---")
