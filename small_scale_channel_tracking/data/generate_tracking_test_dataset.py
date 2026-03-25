@@ -81,10 +81,10 @@ def main():
     # State evolution
     x0_tau_plus_1 = RHO * x0_tau + w
     
-    # 5. Generate Pilot Observations (Measurement Matrix M)
+    # 5. Generate Pilot Observations (QPSK)
     print("Generating pilot measurements...")
-    M_real = torch.randn(NUM_PILOTS, R_T)
-    M_imag = torch.randn(NUM_PILOTS, R_T)
+    M_real = (torch.randint(0, 2, size=(NUM_PILOTS, R_T)).float() * 2 - 1) 
+    M_imag = (torch.randint(0, 2, size=(NUM_PILOTS, R_T)).float() * 2 - 1)
     M = (M_real + 1j * M_imag) / np.sqrt(2)
     
     # Clean received signal: y_clean = x0_tau_plus_1 * M^T
