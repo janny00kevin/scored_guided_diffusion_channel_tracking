@@ -37,8 +37,8 @@ NUM_SAMPLING_STEPS = 1000
 # K_START defines how much noise to add to the KF prediction. 
 # For rho=0.995 (very accurate prediction), a small value (15) is perfect. 
 # If tracking faster users (e.g. rho=0.8), you would increase this.
-K_START = 100
-GUIDANCE_LAMBDA = 0.24
+K_START = 20
+GUIDANCE_LAMBDA = 0.35
 # -----------------------------------
 
 MODEL_WEIGHT_FILE_NAME = f"Tracker_DDIM_{FREQ_GHZ}GHz_rT{R_T}_{MODEL_TYPE}_lr{LR:.0e}.pth"
@@ -92,7 +92,7 @@ elif MODE == 'test':
     from diffusion.ddim_sampler_tracker import ddim_tracking_sampler
     from models.epsnet_mlp import EpsNetMLP
     
-    print("\n[Info] Initializing Tracking Inference Stage...")
+    # print("\n[Info] Initializing Tracking Inference Stage...")
     
     # 1. Load Trained Model
     weights_path = os.path.join(script_dir, "weights", MODEL_WEIGHT_FILE_NAME)
@@ -159,8 +159,8 @@ elif MODE == 'test':
         
         # print(f"  SNR {snr:2d} dB | DDIM Tracking NMSE: {nmse_db:6.2f} dB")
         
-    print("\n" + "="*60)
-    print("FINAL TRACKING NMSE RESULTS")
+    # print("\n" + "="*60)
+    # print("FINAL TRACKING NMSE RESULTS")
     print("="*60)
     
     # Format as aligned horizontal arrays
@@ -169,7 +169,7 @@ elif MODE == 'test':
     
     print(f"SNR (dB)  : [ {snr_str} ]")
     print(f"NMSE (dB) : [ {nmse_str} ]")
-    print("="*60 + "\n")
+    print("="*60)
     
     # 5. Save Results
     res_filename = f"NMSE_Tracker_DDIM_{FREQ_GHZ}GHz_rho{RHO:.3f}.mat"
@@ -181,4 +181,4 @@ elif MODE == 'test':
         'x0_nmse': np.array(nmse_results)
     })
     
-    print(f"\n[Success] Tracking Results saved to {res_filename}")
+    # print(f"[Success] Tracking Results saved to {res_filename}")
