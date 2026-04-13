@@ -37,8 +37,8 @@ NUM_SAMPLING_STEPS = 1000
 # K_START defines how much noise to add to the KF prediction. 
 # For rho=0.995 (very accurate prediction), a small value (15) is perfect. 
 # If tracking faster users (e.g. rho=0.8), you would increase this.
-K_START = 100
-GUIDANCE_LAMBDA = 0.53
+K_START = 50
+GUIDANCE_LAMBDA = 1.2
 # -----------------------------------
 
 MODEL_WEIGHT_FILE_NAME = f"Tracker_DDIM_{FREQ_GHZ}GHz_rT{R_T}_{MODEL_TYPE}_lr{LR:.0e}.pth"

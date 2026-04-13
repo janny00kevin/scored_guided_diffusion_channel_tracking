@@ -24,7 +24,7 @@ SNR_LEVELS = [-4, -2, 0, 2, 4, 6, 8, 10]
 
 # Tracking Physics Parameters
 RHO = 0.1034       # Base temporal correlation
-OFF_DIAG_STD = 0.1 # Standard deviation of the off-diagonal leakage
+OFF_DIAG_STD = 0.2 # Standard deviation of the off-diagonal leakage
 NUM_PILOTS = R_T   # T >= r_T
 
 # Input Paths
