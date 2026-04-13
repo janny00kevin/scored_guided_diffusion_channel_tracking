@@ -14,7 +14,7 @@ R_T = 38
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 # Adjust to point to the newly generated dataset
-DATASET_PATH = os.path.join(SCRIPT_DIR, "data", "training_testing_dataset", f"tracking_test_data_rho{RHO:.3f}_{FREQ_GHZ}GHz_{NUM_TEST_SAMPLES}samples.pt")
+DATASET_PATH = os.path.join(SCRIPT_DIR, "data", "training_testing_dataset", f"tracking_test_nondiag_rho{RHO:.3f}_{FREQ_GHZ}GHz_{NUM_TEST_SAMPLES}samples.pt")
 
 OUTPUT_DIR = os.path.join(SCRIPT_DIR, "test_results", "NMSE_raw_mats")
 OUTPUT_FILE = os.path.join(OUTPUT_DIR, f"NMSE_Baseline_Kalman_Filter_{FREQ_GHZ}GHz_rho{RHO:.3f}.mat")
