@@ -73,7 +73,7 @@ def ddim_tracking_sampler(y_obs_complex, M_complex, x0_tau_complex, rho,
             grad_norm = grad_real * data_std
             
             # Apply guidance
-            x0_hat_guided_norm = x0_hat_norm + guidance_lambda * grad_norm
+            x0_hat_guided_norm = x0_hat_norm + guidance_lambda * sqrt_1m_a_cur * grad_norm
             
             # Recalculate equivalent noise to step down properly
             eps_guided = (x_t - sqrt_a_cur * x0_hat_guided_norm) / (sqrt_1m_a_cur + 1e-12)
@@ -95,7 +95,7 @@ def ddim_tracking_sampler(y_obs_complex, M_complex, x0_tau_complex, rho,
         grad_cplx = torch.matmul(err_cplx, M_complex.conj()) / max(sigma_n2, max_thred)
         grad_norm = complex_to_real_concat(grad_cplx) * data_std
         
-        x0_hat_final_guided_norm = x0_hat_final_norm + guidance_lambda * grad_norm
+        x0_hat_final_guided_norm = x0_hat_final_norm + guidance_lambda * sqrt_1m_a_cur * grad_norm
         
         # Output final physical complex state
         x0_final_phys_real = x0_hat_final_guided_norm * data_std + data_mean

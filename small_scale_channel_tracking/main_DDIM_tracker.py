@@ -13,7 +13,7 @@ FREQ_GHZ = 12
 TX_DIM = [8, 8]
 RX_DIM = [1, 1]
 RHO = 0.1034
-R_T = 38
+R_T = 64
 NUM_SAMPLES = 1000000
 CUDA = 0
 
@@ -38,7 +38,7 @@ NUM_SAMPLING_STEPS = 1000
 # For rho=0.995 (very accurate prediction), a small value (15) is perfect. 
 # If tracking faster users (e.g. rho=0.8), you would increase this.
 K_START = 50
-GUIDANCE_LAMBDA = 1.2
+GUIDANCE_LAMBDA = 50
 # -----------------------------------
 
 MODEL_WEIGHT_FILE_NAME = f"Tracker_DDIM_{FREQ_GHZ}GHz_rT{R_T}_{MODEL_TYPE}_lr{LR:.0e}.pth"
@@ -61,7 +61,7 @@ if MODE == 'train':
                                 f"x0_{FREQ_GHZ}GHz_{TX_DIM[0]}x{TX_DIM[1]}Tx_{RX_DIM[0]}x{RX_DIM[1]}Rx_{NUM_SAMPLES}samples_rT{R_T}.pt")
 
     print(f'[Info] Loading dataset from:\n  {DATASET_PATH}')
-    x0_complex = torch.load(DATASET_PATH) # Expected shape: (1000000, 38)
+    x0_complex = torch.load(DATASET_PATH) # Expected shape: (1000000, 64)
 
     # Separate real and imaginary components.
     # The new shape will be (1000000, 76), acting as the raw features for the MLP

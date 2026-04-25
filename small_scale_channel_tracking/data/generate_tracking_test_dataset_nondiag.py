@@ -18,7 +18,7 @@ from utils.channel_utils import calculate_coupling_matrix
 FREQ_GHZ = 12
 TX_DIM = [8, 8]
 RX_DIM = [1, 1]
-R_T = 38
+R_T = 64
 NUM_TEST_SAMPLES = 3000
 SNR_LEVELS = [-4, -2, 0, 2, 4, 6, 8, 10]
 
@@ -61,7 +61,7 @@ def main():
     print("Projecting test samples into modal domain x0(tau)...")
     H_c = np.matmul(H_samples, C_T_sqrt)
     H_tilde = np.matmul(H_c, U_T_trunc)
-    x0_tau_np = np.squeeze(H_tilde) # Shape: (3000, 38)
+    x0_tau_np = np.squeeze(H_tilde) # Shape: (3000, 64)
     
     # Convert to PyTorch tensor
     x0_tau = torch.tensor(x0_tau_np, dtype=torch.complex64)
@@ -107,7 +107,7 @@ def main():
     M = (M_real + 1j * M_imag) / np.sqrt(2)
     
     # Clean received signal: y_clean = x0_tau_plus_1 * M^T
-    y_clean = torch.matmul(x0_tau_plus_1, M.t()) # Shape: (3000, 38)
+    y_clean = torch.matmul(x0_tau_plus_1, M.t()) # Shape: (3000, 64)
     sig_power = torch.mean(torch.abs(y_clean)**2)
     
     # 6. Generate Noisy Observations for each SNR

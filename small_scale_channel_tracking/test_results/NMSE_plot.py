@@ -13,7 +13,8 @@ RHO = 0.1034
 FILES = {
     "Kalman Filter": f"NMSE_Baseline_Kalman_Filter_{FREQ_GHZ}GHz_rho{RHO:.3f}.mat",
     # Once you finish the DDIM testing script, you can simply uncomment and add its .mat file here:
-    "DDIM Tracker": f"NMSE_Tracker_DDIM_{FREQ_GHZ}GHz_rho{RHO:.3f}.mat", 
+    r"DDIM Tracker w/ fixed $\eta_k$": f"NMSE_Tracker_DDIM_{FREQ_GHZ}GHz_rho{RHO:.3f}_fixed_eta.mat", 
+    r"DDIM Tracker w/ varied $\eta_k$": f"NMSE_Tracker_DDIM_{FREQ_GHZ}GHz_rho{RHO:.3f}.mat",
 }
 
 STYLES = {
@@ -24,9 +25,16 @@ STYLES = {
         'linewidth': 2, 
         'markersize': 8
     },
-    "DDIM Tracker": {
+    r"DDIM Tracker w/ fixed $\eta_k$": {
         'color': 'orange', 
         'marker': 'o', 
+        'linestyle': '-',  
+        'linewidth': 2, 
+        'markersize': 8
+    },
+    r"DDIM Tracker w/ varied $\eta_k$": {
+        'color': 'green', 
+        'marker': 'D', 
         'linestyle': '-',  
         'linewidth': 2, 
         'markersize': 8
