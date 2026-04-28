@@ -16,6 +16,8 @@ RHO = 0.1034
 R_T = 38
 NUM_SAMPLES = 1000000
 CUDA = 0
+CHAN_MODE = 'spatial' # 'spatial' or 'modal'
+NUM_PILOTS = TX_DIM[0] * TX_DIM[1]   
 
 # Training settings
 NUM_EPOCHS = 10000
@@ -40,8 +42,10 @@ NUM_SAMPLING_STEPS = 1000
 K_START = 50
 GUIDANCE_LAMBDA = 40
 # -----------------------------------
-
-MODEL_WEIGHT_FILE_NAME = f"Tracker_DDIM_{FREQ_GHZ}GHz_rT{R_T}_{MODEL_TYPE}_lr{LR:.0e}.pth"
+if CHAN_MODE == 'spatial':
+    MODEL_WEIGHT_FILE_NAME = f"Tracker_DDIM_{FREQ_GHZ}GHz_spatial_{MODEL_TYPE}_lr{LR:.0e}.pth"
+elif CHAN_MODE == 'modal':
+    MODEL_WEIGHT_FILE_NAME = f"Tracker_DDIM_{FREQ_GHZ}GHz_rT{R_T}_{MODEL_TYPE}_lr{LR:.0e}.pth"
 
 # -----------------------------
 # Setup
@@ -57,8 +61,12 @@ if MODE == 'train':
     from train_tracker import train_latent_epsnet_tracker
 
     # Construct the path to the npy file generated earlier
-    DATASET_PATH = os.path.join(script_dir, "data", "training_testing_dataset", 
-                                f"x0_{FREQ_GHZ}GHz_{TX_DIM[0]}x{TX_DIM[1]}Tx_{RX_DIM[0]}x{RX_DIM[1]}Rx_{NUM_SAMPLES}samples_rT{R_T}.pt")
+    if CHAN_MODE == 'spatial':
+        DATASET_PATH =  os.path.join(script_dir, "data", "training_testing_dataset", 
+                                     f"x0_{int(FREQ_GHZ)}GHz_{TX_DIM[0]}x{TX_DIM[1]}Tx_{RX_DIM[0]}x{RX_DIM[1]}Rx_{NUM_SAMPLES}samples_spatial.pt")
+    elif CHAN_MODE == 'modal':
+        DATASET_PATH = os.path.join(script_dir, "data", "training_testing_dataset", 
+                                    f"x0_{int(FREQ_GHZ)}GHz_{TX_DIM[0]}x{TX_DIM[1]}Tx_{RX_DIM[0]}x{RX_DIM[1]}Rx_{NUM_SAMPLES}samples_rT{R_T}.pt")
 
     print(f'[Info] Loading dataset from:\n  {DATASET_PATH}')
     x0_complex = torch.load(DATASET_PATH) # Expected shape: (1000000, 64)
@@ -101,7 +109,10 @@ elif MODE == 'test':
         
     checkpoint = torch.load(weights_path, map_location=device)
     
-    dim = R_T * 2
+    if CHAN_MODE == 'spatial':
+        dim = 64 * 2
+    elif CHAN_MODE == 'modal':
+        dim = R_T * 2
     eps_net = EpsNetMLP(dim=dim, hidden=512, time_emb_dim=128).to(device)
     eps_net.load_state_dict(checkpoint['model_state_dict'])
     eps_net.eval()
@@ -111,7 +122,7 @@ elif MODE == 'test':
     
     # 2. Load Testing Data
     # Ensure NUM_TEST_SAMPLES = 3000 at the top of your file
-    dataset = get_tracking_testing_dataset(script_dir, NUM_TEST_SAMPLES, RHO, FREQ_GHZ, R_T)
+    dataset = get_tracking_testing_dataset(script_dir, NUM_TEST_SAMPLES, RHO, FREQ_GHZ, R_T, NUM_PILOTS, CHAN_MODE)
     config = dataset["config"]
     rho = config["rho"]
     
@@ -172,7 +183,10 @@ elif MODE == 'test':
     print("="*60)
     
     # 5. Save Results
-    res_filename = f"NMSE_Tracker_DDIM_{FREQ_GHZ}GHz_rho{RHO:.3f}_rT{R_T}.mat"
+    if CHAN_MODE == 'spatial':
+        res_filename = f"NMSE_Tracker_DDIM_spatial_T{NUM_PILOTS}_{FREQ_GHZ}GHz_rho{RHO:.3f}.mat"
+    elif CHAN_MODE == 'modal':
+        res_filename = f"NMSE_Tracker_DDIM_rT{R_T}_T{NUM_PILOTS}_{FREQ_GHZ}GHz_rho{RHO:.3f}.mat"
     res_path = os.path.join(script_dir, "test_results", "NMSE_raw_mats")
     os.makedirs(res_path, exist_ok=True)
     

@@ -11,14 +11,25 @@ SNR_LEVELS = [-4, -2, 0, 2, 4, 6, 8, 10]
 RHO = 0.1034
 FREQ_GHZ = 12
 R_T = 38
+NUM_PILOTS = 64
+MODE = 'spatial' # 'spatial' or 'modal'
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 # Adjust to point to the newly generated dataset
-DATASET_PATH = os.path.join(SCRIPT_DIR, "data", "training_testing_dataset", 
-                            f"tracking_test_nondiag_rho{RHO:.3f}_{FREQ_GHZ}GHz_{NUM_TEST_SAMPLES}samples_rT{R_T}.pt")
+if MODE == 'spatial':
+    DATASET_PATH = os.path.join(SCRIPT_DIR, "data", "training_testing_dataset", 
+                            f"tracking_test_nondiag_spatial_T{NUM_PILOTS}_rho{RHO:.3f}_{FREQ_GHZ}GHz_{NUM_TEST_SAMPLES}samples.pt")
+elif MODE == 'modal':
+    DATASET_PATH = os.path.join(SCRIPT_DIR, "data", "training_testing_dataset", 
+                            f"tracking_test_nondiag_rT{R_T}_T{NUM_PILOTS}_rho{RHO:.3f}_{FREQ_GHZ}GHz_{NUM_TEST_SAMPLES}samples.pt")
 
 OUTPUT_DIR = os.path.join(SCRIPT_DIR, "test_results", "NMSE_raw_mats")
-OUTPUT_FILE = os.path.join(OUTPUT_DIR, f"NMSE_Baseline_Kalman_Filter_{FREQ_GHZ}GHz_rho{RHO:.3f}_rT{R_T}.mat")
+if MODE == 'spatial':
+    OUTPUT_FILE = os.path.join(OUTPUT_DIR, 
+                                 f"NMSE_Baseline_Kalman_Filter_spatial_T{NUM_PILOTS}_{FREQ_GHZ}GHz_rho{RHO:.3f}.mat")
+elif MODE == 'modal':
+    OUTPUT_FILE = os.path.join(OUTPUT_DIR, 
+                                 f"NMSE_Baseline_Kalman_Filter_rT{R_T}_T{NUM_PILOTS}_{FREQ_GHZ}GHz_rho{RHO:.3f}.mat")
 
 # ==========================================
 # 2. Kalman Filter Implementation

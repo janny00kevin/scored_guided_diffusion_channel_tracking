@@ -8,14 +8,22 @@ import numpy as np
 # =============================
 FREQ_GHZ = 12
 RHO = 0.1034
+CHAN_MODE = 'spatial'  # or 'modal'
 
 # Load .mat files to plot
-FILES = {
-    "Kalman Filter": f"NMSE_Baseline_Kalman_Filter_{FREQ_GHZ}GHz_rho{RHO:.3f}.mat",
-    # Once you finish the DDIM testing script, you can simply uncomment and add its .mat file here:
-    r"DDIM Tracker w/ fixed $\eta_k$": f"NMSE_Tracker_DDIM_{FREQ_GHZ}GHz_rho{RHO:.3f}_fixed_eta.mat", 
-    r"DDIM Tracker w/ varied $\eta_k$": f"NMSE_Tracker_DDIM_{FREQ_GHZ}GHz_rho{RHO:.3f}.mat",
-}
+if CHAN_MODE == 'spatial':
+    FILES = {
+        "Kalman Filter": f"NMSE_Baseline_Kalman_Filter_spatial_T64_{FREQ_GHZ}GHz_rho{RHO:.3f}.mat",
+        # r"DDIM Tracker w/ fixed $\eta_k$": f"NMSE_Tracker_DDIM_spatial_T64_{FREQ_GHZ}GHz_rho{RHO:.3f}_fixed_eta.mat", 
+        r"DDIM Tracker w/ varied $\eta_k$": f"NMSE_Tracker_DDIM_spatial_T64_{FREQ_GHZ}GHz_rho{RHO:.3f}.mat",
+    }
+elif CHAN_MODE == 'modal':
+    FILES = {
+        "Kalman Filter": f"NMSE_Baseline_Kalman_Filter_{FREQ_GHZ}GHz_rho{RHO:.3f}.mat",
+        # Once you finish the DDIM testing script, you can simply uncomment and add its .mat file here:
+        r"DDIM Tracker w/ fixed $\eta_k$": f"NMSE_Tracker_DDIM_{FREQ_GHZ}GHz_rho{RHO:.3f}_fixed_eta.mat", 
+        r"DDIM Tracker w/ varied $\eta_k$": f"NMSE_Tracker_DDIM_{FREQ_GHZ}GHz_rho{RHO:.3f}.mat",
+    }
 
 STYLES = {
     "Kalman Filter": {
@@ -141,13 +149,18 @@ def plot_and_save_metric(metric_type, title, ylabel, save_name_base, script_dir)
 def main():
     script_dir = os.path.dirname(os.path.abspath(__file__))
     print("[Info] Generating tracking plots...")
+    
+    if CHAN_MODE == 'spatial':
+        save_name = f"NMSE_Tracker_spatial_{FREQ_GHZ}GHz_rho{RHO:.3f}"
+    elif CHAN_MODE == 'modal':
+        save_name = f"NMSE_Tracker_modal_{FREQ_GHZ}GHz_rho{RHO:.3f}"
 
     # Plot Tracking NMSE (x0 state)
     plot_and_save_metric(
         metric_type="x0",
         title="Channel Tracking Performance",
         ylabel="Tracking NMSE (dB)",
-        save_name_base=f"NMSE_Tracker_{FREQ_GHZ}GHz_rho{RHO:.3f}",
+        save_name_base=save_name,
         script_dir=script_dir
     )
 
