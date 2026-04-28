@@ -10,14 +10,15 @@ NUM_TEST_SAMPLES = 3000
 SNR_LEVELS = [-4, -2, 0, 2, 4, 6, 8, 10]
 RHO = 0.1034
 FREQ_GHZ = 12
-R_T = 64
+R_T = 38
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 # Adjust to point to the newly generated dataset
-DATASET_PATH = os.path.join(SCRIPT_DIR, "data", "training_testing_dataset", f"tracking_test_nondiag_rho{RHO:.3f}_{FREQ_GHZ}GHz_{NUM_TEST_SAMPLES}samples.pt")
+DATASET_PATH = os.path.join(SCRIPT_DIR, "data", "training_testing_dataset", 
+                            f"tracking_test_nondiag_rho{RHO:.3f}_{FREQ_GHZ}GHz_{NUM_TEST_SAMPLES}samples_rT{R_T}.pt")
 
 OUTPUT_DIR = os.path.join(SCRIPT_DIR, "test_results", "NMSE_raw_mats")
-OUTPUT_FILE = os.path.join(OUTPUT_DIR, f"NMSE_Baseline_Kalman_Filter_{FREQ_GHZ}GHz_rho{RHO:.3f}.mat")
+OUTPUT_FILE = os.path.join(OUTPUT_DIR, f"NMSE_Baseline_Kalman_Filter_{FREQ_GHZ}GHz_rho{RHO:.3f}_rT{R_T}.mat")
 
 # ==========================================
 # 2. Kalman Filter Implementation

@@ -13,7 +13,7 @@ FREQ_GHZ = 12
 TX_DIM = [8, 8]
 RX_DIM = [1, 1]
 RHO = 0.1034
-R_T = 64
+R_T = 38
 NUM_SAMPLES = 1000000
 CUDA = 0
 
@@ -38,7 +38,7 @@ NUM_SAMPLING_STEPS = 1000
 # For rho=0.995 (very accurate prediction), a small value (15) is perfect. 
 # If tracking faster users (e.g. rho=0.8), you would increase this.
 K_START = 50
-GUIDANCE_LAMBDA = 50
+GUIDANCE_LAMBDA = 40
 # -----------------------------------
 
 MODEL_WEIGHT_FILE_NAME = f"Tracker_DDIM_{FREQ_GHZ}GHz_rT{R_T}_{MODEL_TYPE}_lr{LR:.0e}.pth"
@@ -111,7 +111,7 @@ elif MODE == 'test':
     
     # 2. Load Testing Data
     # Ensure NUM_TEST_SAMPLES = 3000 at the top of your file
-    dataset = get_tracking_testing_dataset(script_dir, NUM_TEST_SAMPLES, RHO, FREQ_GHZ)
+    dataset = get_tracking_testing_dataset(script_dir, NUM_TEST_SAMPLES, RHO, FREQ_GHZ, R_T)
     config = dataset["config"]
     rho = config["rho"]
     
@@ -172,7 +172,7 @@ elif MODE == 'test':
     print("="*60)
     
     # 5. Save Results
-    res_filename = f"NMSE_Tracker_DDIM_{FREQ_GHZ}GHz_rho{RHO:.3f}.mat"
+    res_filename = f"NMSE_Tracker_DDIM_{FREQ_GHZ}GHz_rho{RHO:.3f}_rT{R_T}.mat"
     res_path = os.path.join(script_dir, "test_results", "NMSE_raw_mats")
     os.makedirs(res_path, exist_ok=True)
     
