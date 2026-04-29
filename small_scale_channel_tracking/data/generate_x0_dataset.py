@@ -21,6 +21,7 @@ R_T = 64
 NUM_SAMPLES = 1000000  # 1000000 or 3000
 TX_DIM = [8, 8]
 RX_DIM = [1, 1]
+MODE = 'spatial' # 'spatial' or 'modal'
 
 # File Paths
 DATA_DIR = os.path.join(SCRIPT_DIR) 
@@ -33,7 +34,12 @@ OUTPUT_DIR = os.path.join(DATA_DIR, "training_testing_dataset")
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
 # Appending size info to the filename
-OUTPUT_FILENAME = f"x0_{int(FREQ_GHZ)}GHz_{TX_DIM[0]}x{TX_DIM[1]}Tx_{RX_DIM[0]}x{RX_DIM[1]}Rx_{NUM_SAMPLES}samples_rT{R_T}.pt"
+if MODE == 'spatial':
+    OUTPUT_FILENAME = f"x0_{int(FREQ_GHZ)}GHz_{TX_DIM[0]}x{TX_DIM[1]}Tx_{RX_DIM[0]}x{RX_DIM[1]}Rx_{NUM_SAMPLES}samples_spatial.pt"
+elif MODE == 'modal':
+    OUTPUT_FILENAME = f"x0_{int(FREQ_GHZ)}GHz_{TX_DIM[0]}x{TX_DIM[1]}Tx_{RX_DIM[0]}x{RX_DIM[1]}Rx_{NUM_SAMPLES}samples_rT{R_T}.pt"
+else:
+    raise ValueError(f"Invalid MODE: {MODE}. Choose 'spatial' or 'modal'.")
 OUTPUT_FILE = os.path.join(OUTPUT_DIR, OUTPUT_FILENAME)
 
 # ==========================================
@@ -46,11 +52,12 @@ def main():
     print("Computing Transmit Coupling Matrix (C_T)...")
     C_T = calculate_coupling_matrix(Z_FILE_TX)
     C_T_sqrt = sqrtm(C_T)
-    
-    # 2. Load Modal Eigenvectors
-    print("Loading Eigenvectors...")
-    U_T_full = sio.loadmat(EIGEN_FILE_TX)['U_T_sorted']
-    U_T_trunc = U_T_full[:, :R_T]
+        
+    if MODE == 'modal':
+        # 2. Load Modal Eigenvectors
+        print("Loading Eigenvectors...")
+        U_T_full = sio.loadmat(EIGEN_FILE_TX)['U_T_sorted']
+        U_T_trunc = U_T_full[:, :R_T]
     
     # 3. Load Raw Channel Samples
     print(f"Loading raw channel samples from:\n{os.path.basename(CHANNEL_FILE)}")
@@ -62,14 +69,19 @@ def main():
     # Transposing from HDF5 format (64, 1, num_samples) to Python format (num_samples, 1, 64)
     H_samples = np.transpose(H_complex, (2, 1, 0))
     print(f"Loaded {H_samples.shape[0]} samples successfully.")
-    
-    # 4. Compute x_0 (Modal Domain Projection)
-    print("Projecting spatial channels into modal domain...")
     H_c = np.matmul(H_samples, C_T_sqrt)
-    H_tilde = np.matmul(H_c, U_T_trunc)
     
-    # Squeeze the 1x38 matrix into a flat length-38 vector per sample
-    x_0 = np.squeeze(H_tilde) # Shape: (1000000, 38)
+    
+    # Squeeze the 1xr_T or 1xN_T matrix into a flat length-r_T vector per sample
+    if MODE == 'spatial':
+        # 4. Compute x_0 (Spatial Domain Projection)
+        print("Using spatial domain coupling-aware channels as x_0...")
+        x_0 = np.squeeze(H_c) # Shape: (1000000, N_T)
+    elif MODE == 'modal':
+        # 4. Compute x_0 (Modal Domain Projection)
+        print("Projecting spatial channels into modal domain...")
+        H_tilde = np.matmul(H_c, U_T_trunc)
+        x_0 = np.squeeze(H_tilde) # Shape: (1000000, r_T)
     
 # 5. Save the Dataset
     x_0_tensor = torch.tensor(x_0, dtype=torch.complex64) # <--- Convert to PyTorch tensor
