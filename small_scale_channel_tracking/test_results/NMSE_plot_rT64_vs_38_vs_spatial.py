@@ -18,6 +18,9 @@ FILES = {
     f"Kalman Filter ($r_T=64$)": f"NMSE_KF_rT64_T64_{FREQ_GHZ}GHz_rho{RHO:.3f}.mat",
     r"DDIM Tracker w/ fixed $\eta_k$ ($r_T=64$)": f"NMSE_DDIM_rT64_T64_{FREQ_GHZ}GHz_rho{RHO:.3f}_fixed_eta.mat", 
     r"DDIM Tracker w/ varied $\eta_k$ ($r_T=64$)": f"NMSE_DDIM_rT64_T64_{FREQ_GHZ}GHz_rho{RHO:.3f}.mat",
+    f"Kalman Filter (spatial)": f"NMSE_KF_spatial_T64_{FREQ_GHZ}GHz_rho{RHO:.3f}.mat",
+    r"DDIM Tracker w/ fixed $\eta_k$ (spatial)": f"NMSE_DDIM_spatial_T64_{FREQ_GHZ}GHz_rho{RHO:.3f}_fixed_eta.mat", 
+    r"DDIM Tracker w/ varied $\eta_k$ (spatial)": f"NMSE_DDIM_spatial_T64_{FREQ_GHZ}GHz_rho{RHO:.3f}.mat",
 }
 
 STYLES = {
@@ -60,6 +63,27 @@ STYLES = {
         'color': 'green', 
         'marker': 'D', 
         'linestyle': '--',  
+        'linewidth': 2, 
+        'markersize': 8
+    },
+    "Kalman Filter (spatial)": {
+        'color': 'blue', 
+        'marker': 's', 
+        'linestyle': ':', 
+        'linewidth': 2, 
+        'markersize': 8
+    },
+    r"DDIM Tracker w/ fixed $\eta_k$ (spatial)": {
+        'color': 'orange', 
+        'marker': 'o', 
+        'linestyle': ':',  
+        'linewidth': 2, 
+        'markersize': 8
+    },
+    r"DDIM Tracker w/ varied $\eta_k$ (spatial)": {
+        'color': 'green', 
+        'marker': 'D', 
+        'linestyle': ':',  
         'linewidth': 2, 
         'markersize': 8
     },
@@ -171,7 +195,7 @@ def main():
         metric_type="x0",
         title="Channel Tracking Performance",
         ylabel="Tracking NMSE (dB)",
-        save_name_base=f"NMSE_Tracker_{FREQ_GHZ}GHz_rho{RHO:.3f}_rT64_vs_38",
+        save_name_base=f"NMSE_Tracker_{FREQ_GHZ}GHz_rho{RHO:.3f}_rT64_vs_38_spatial",
         script_dir=script_dir
     )
 

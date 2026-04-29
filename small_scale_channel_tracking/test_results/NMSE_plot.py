@@ -13,16 +13,15 @@ CHAN_MODE = 'spatial'  # or 'modal'
 # Load .mat files to plot
 if CHAN_MODE == 'spatial':
     FILES = {
-        "Kalman Filter": f"NMSE_Baseline_Kalman_Filter_spatial_T64_{FREQ_GHZ}GHz_rho{RHO:.3f}.mat",
-        # r"DDIM Tracker w/ fixed $\eta_k$": f"NMSE_Tracker_DDIM_spatial_T64_{FREQ_GHZ}GHz_rho{RHO:.3f}_fixed_eta.mat", 
-        r"DDIM Tracker w/ varied $\eta_k$": f"NMSE_Tracker_DDIM_spatial_T64_{FREQ_GHZ}GHz_rho{RHO:.3f}.mat",
+        f"Kalman Filter": f"NMSE_KF_spatial_T64_{FREQ_GHZ}GHz_rho{RHO:.3f}.mat",
+        r"DDIM Tracker w/ fixed $\eta_k$": f"NMSE_DDIM_spatial_T64_{FREQ_GHZ}GHz_rho{RHO:.3f}_fixed_eta.mat", 
+        r"DDIM Tracker w/ varied $\eta_k$": f"NMSE_DDIM_spatial_T64_{FREQ_GHZ}GHz_rho{RHO:.3f}.mat",
     }
 elif CHAN_MODE == 'modal':
     FILES = {
-        "Kalman Filter": f"NMSE_Baseline_Kalman_Filter_{FREQ_GHZ}GHz_rho{RHO:.3f}.mat",
-        # Once you finish the DDIM testing script, you can simply uncomment and add its .mat file here:
-        r"DDIM Tracker w/ fixed $\eta_k$": f"NMSE_Tracker_DDIM_{FREQ_GHZ}GHz_rho{RHO:.3f}_fixed_eta.mat", 
-        r"DDIM Tracker w/ varied $\eta_k$": f"NMSE_Tracker_DDIM_{FREQ_GHZ}GHz_rho{RHO:.3f}.mat",
+        f"Kalman Filter": f"NMSE_KF_rT64_T64_{FREQ_GHZ}GHz_rho{RHO:.3f}.mat",
+        r"DDIM Tracker w/ fixed $\eta_k$": f"NMSE_DDIM_rT64_T64_{FREQ_GHZ}GHz_rho{RHO:.3f}_fixed_eta.mat", 
+        r"DDIM Tracker w/ varied $\eta_k$": f"NMSE_DDIM_rT64_T64_{FREQ_GHZ}GHz_rho{RHO:.3f}.mat",
     }
 
 STYLES = {
