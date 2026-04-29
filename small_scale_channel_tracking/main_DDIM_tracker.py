@@ -16,8 +16,8 @@ RHO = 0.1034
 R_T = 38
 NUM_SAMPLES = 1000000
 CUDA = 0
-CHAN_MODE = 'spatial' # 'spatial' or 'modal'
-NUM_PILOTS = TX_DIM[0] * TX_DIM[1]   
+CHAN_MODE = 'modal' # 'spatial' or 'modal'
+NUM_PILOTS = 38  
 
 # Training settings
 NUM_EPOCHS = 10000
@@ -184,9 +184,9 @@ elif MODE == 'test':
     
     # 5. Save Results
     if CHAN_MODE == 'spatial':
-        res_filename = f"NMSE_Tracker_DDIM_spatial_T{NUM_PILOTS}_{FREQ_GHZ}GHz_rho{RHO:.3f}.mat"
+        res_filename = f"NMSE_DDIM_spatial_T{NUM_PILOTS}_{FREQ_GHZ}GHz_rho{RHO:.3f}.mat"
     elif CHAN_MODE == 'modal':
-        res_filename = f"NMSE_Tracker_DDIM_rT{R_T}_T{NUM_PILOTS}_{FREQ_GHZ}GHz_rho{RHO:.3f}.mat"
+        res_filename = f"NMSE_DDIM_rT{R_T}_T{NUM_PILOTS}_{FREQ_GHZ}GHz_rho{RHO:.3f}.mat"
     res_path = os.path.join(script_dir, "test_results", "NMSE_raw_mats")
     os.makedirs(res_path, exist_ok=True)
     

@@ -10,7 +10,7 @@ NUM_TEST_SAMPLES = 3000
 SNR_LEVELS = [-4, -2, 0, 2, 4, 6, 8, 10]
 RHO = 0.1034
 FREQ_GHZ = 12
-R_T = 38
+R_T = 64
 NUM_PILOTS = 64
 MODE = 'spatial' # 'spatial' or 'modal'
 
@@ -26,10 +26,10 @@ elif MODE == 'modal':
 OUTPUT_DIR = os.path.join(SCRIPT_DIR, "test_results", "NMSE_raw_mats")
 if MODE == 'spatial':
     OUTPUT_FILE = os.path.join(OUTPUT_DIR, 
-                                 f"NMSE_Baseline_Kalman_Filter_spatial_T{NUM_PILOTS}_{FREQ_GHZ}GHz_rho{RHO:.3f}.mat")
+                                 f"NMSE_KF_spatial_T{NUM_PILOTS}_{FREQ_GHZ}GHz_rho{RHO:.3f}.mat")
 elif MODE == 'modal':
     OUTPUT_FILE = os.path.join(OUTPUT_DIR, 
-                                 f"NMSE_Baseline_Kalman_Filter_rT{R_T}_T{NUM_PILOTS}_{FREQ_GHZ}GHz_rho{RHO:.3f}.mat")
+                                 f"NMSE_KF_rT{R_T}_T{NUM_PILOTS}_{FREQ_GHZ}GHz_rho{RHO:.3f}.mat")
 
 # ==========================================
 # 2. Kalman Filter Implementation
