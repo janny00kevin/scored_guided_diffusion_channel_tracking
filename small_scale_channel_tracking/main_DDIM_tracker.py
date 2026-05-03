@@ -16,8 +16,8 @@ RHO = 0.1034
 R_T = 38
 NUM_SAMPLES = 1000000
 CUDA = 0
-CHAN_MODE = 'modal' # 'spatial' or 'modal'
-NUM_PILOTS = 38  
+CHAN_MODE = 'spatial' # 'spatial' or 'modal'
+NUM_PILOTS = 64*20
 
 # Training settings
 NUM_EPOCHS = 10000
@@ -36,11 +36,10 @@ T_DIFFUSION = 1000.0
 # --- Tunable Tracking Parameters ---
 NUM_TEST_SAMPLES = 3000
 NUM_SAMPLING_STEPS = 1000
-# K_START defines how much noise to add to the KF prediction. 
-# For rho=0.995 (very accurate prediction), a small value (15) is perfect. 
-# If tracking faster users (e.g. rho=0.8), you would increase this.
 K_START = 50
-GUIDANCE_LAMBDA = 40
+DYNAMIC_ETA = False
+if DYNAMIC_ETA: GUIDANCE_LAMBDA = 50
+else: GUIDANCE_LAMBDA = 1.2
 # -----------------------------------
 if CHAN_MODE == 'spatial':
     MODEL_WEIGHT_FILE_NAME = f"Tracker_DDIM_{FREQ_GHZ}GHz_spatial_{MODEL_TYPE}_lr{LR:.0e}.pth"
@@ -158,7 +157,8 @@ elif MODE == 'test':
             T_DIFFUSION=T_DIFFUSION,
             beta_min=BETA_MIN, 
             beta_max=BETA_MAX, 
-            guidance_lambda=GUIDANCE_LAMBDA, 
+            guidance_lambda=GUIDANCE_LAMBDA,
+            dynamic_eta=DYNAMIC_ETA, 
             device=device
         )
         
@@ -184,9 +184,11 @@ elif MODE == 'test':
     
     # 5. Save Results
     if CHAN_MODE == 'spatial':
-        res_filename = f"NMSE_DDIM_spatial_T{NUM_PILOTS}_{FREQ_GHZ}GHz_rho{RHO:.3f}.mat"
+        if DYNAMIC_ETA: res_filename = f"NMSE_DDIM_spatial_T{NUM_PILOTS}_{FREQ_GHZ}GHz_rho{RHO:.3f}.mat"
+        else: res_filename = f"NMSE_DDIM_spatial_T{NUM_PILOTS}_{FREQ_GHZ}GHz_rho{RHO:.3f}_fixed_eta.mat"
     elif CHAN_MODE == 'modal':
-        res_filename = f"NMSE_DDIM_rT{R_T}_T{NUM_PILOTS}_{FREQ_GHZ}GHz_rho{RHO:.3f}.mat"
+        if DYNAMIC_ETA: res_filename = f"NMSE_DDIM_rT{R_T}_T{NUM_PILOTS}_{FREQ_GHZ}GHz_rho{RHO:.3f}.mat"
+        else: res_filename = f"NMSE_DDIM_rT{R_T}_T{NUM_PILOTS}_{FREQ_GHZ}GHz_rho{RHO:.3f}_fixed_eta.mat"
     res_path = os.path.join(script_dir, "test_results", "NMSE_raw_mats")
     os.makedirs(res_path, exist_ok=True)
     
