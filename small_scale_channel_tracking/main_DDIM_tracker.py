@@ -13,11 +13,11 @@ FREQ_GHZ = 12
 TX_DIM = [8, 8]
 RX_DIM = [1, 1]
 RHO = 0.1034
-R_T = 38
+R_T = 64
 NUM_SAMPLES = 1000000
 CUDA = 0
 CHAN_MODE = 'spatial' # 'spatial' or 'modal'
-NUM_PILOTS = 64*20
+NUM_PILOTS = 64*5
 
 # Training settings
 NUM_EPOCHS = 10000
@@ -36,8 +36,8 @@ T_DIFFUSION = 1000.0
 # --- Tunable Tracking Parameters ---
 NUM_TEST_SAMPLES = 3000
 NUM_SAMPLING_STEPS = 1000
-K_START = 50
-DYNAMIC_ETA = False
+K_START = 30
+DYNAMIC_ETA = True
 if DYNAMIC_ETA: GUIDANCE_LAMBDA = 50
 else: GUIDANCE_LAMBDA = 1.2
 # -----------------------------------
