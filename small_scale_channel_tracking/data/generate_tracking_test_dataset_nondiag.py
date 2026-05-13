@@ -25,7 +25,7 @@ SNR_LEVELS = [-4, -2, 0, 2, 4, 6, 8, 10]
 # Tracking Physics Parameters
 RHO = 0.1034       # Base temporal correlation
 OFF_DIAG_STD = 0.2 # Standard deviation of the off-diagonal leakage
-NUM_PILOTS = 64*2   # T >= r_T
+NUM_PILOTS = 64   # T >= r_T
 MODE = 'spatial' # 'spatial' or 'modal'
 
 # Input Paths
@@ -67,6 +67,7 @@ def main():
     # 3. Project to Modal Domain to get x_0(tau)
     print("Projecting test samples into modal domain x0(tau)...")
     H_c = np.matmul(H_samples, C_T_sqrt)
+    # x0_tau_np = np.squeeze(H_c)
     if MODE == 'spatial':
         x0_tau_np = np.squeeze(H_c) # Shape: (3000, NUM_PILOTS)
     elif MODE == 'modal':
@@ -81,10 +82,7 @@ def main():
     torch.manual_seed(0) # Fix seed for reproducibility across all methods
     
     # Create the non-diagonal transition matrix A
-    if MODE == 'spatial':
-        dim = TX_DIM[0] * TX_DIM[1]
-    elif MODE == 'modal':
-        dim = R_T
+    dim = TX_DIM[0] * TX_DIM[1]
     A = torch.eye(dim, dtype=torch.complex64) * RHO
     noise_real = torch.randn(dim, dim)
     noise_imag = torch.randn(dim, dim)
@@ -93,7 +91,7 @@ def main():
     mask = ~torch.eye(dim, dtype=torch.bool)
     A[mask] += OFF_DIAG_STD * N_off[mask]
     
-    # Spectral Stability Check
+    # Spectral Stability Check for \A
     eigenvalues = torch.linalg.eigvals(A)
     max_eig = torch.max(torch.abs(eigenvalues)).item()
     if max_eig >= 1.0:
@@ -102,20 +100,37 @@ def main():
     else:
         print(f"  Matrix A is stable. Spectral radius: {max_eig:.4f}")
 
-    # Calculate variance for process noise Q
-    x0_var = torch.var(x0_tau, dim=0) 
-    Q_std = torch.sqrt((1 - RHO**2) * x0_var)
+    # Always use spatial dimensions for evolution
+    N_T = TX_DIM[0] * TX_DIM[1] # 64
     
-    # Generate process noise w
-    w_real = torch.randn_like(x0_tau.real)
-    w_imag = torch.randn_like(x0_tau.imag)
-    w = (w_real + 1j * w_imag) / np.sqrt(2) * Q_std
+    # Calculate variance for spatial process noise Q
+    H_c_tensor = torch.squeeze(torch.tensor(H_c, dtype=torch.complex64))
+    spatial_var = torch.var(H_c_tensor, dim=0)  ################
+    # spatial_var = torch.ones(N_T)     
+    Q_std_spatial = torch.sqrt((1 - RHO**2) * spatial_var)  
     
-    # State evolution (Using Matrix Multiplication for the non-diagonal A)
-    x0_tau_plus_1 = torch.matmul(x0_tau, A.t()) + w
+    # Generate spatial process noise w
+    w_real = torch.randn(NUM_TEST_SAMPLES, N_T)
+    w_imag = torch.randn(NUM_TEST_SAMPLES, N_T)
+    w_spatial = (w_real + 1j * w_imag) / np.sqrt(2) * Q_std_spatial
+    
+    # Evolve the spatial channel first
+    Hc_tau_plus_1 = torch.matmul(H_c_tensor, A.t()) + w_spatial
+    
+    if MODE == 'spatial':
+        x0_tau_plus_1 = Hc_tau_plus_1
+    elif MODE == 'modal':
+        # Project the evolved spatial channel to modal domain
+        U_T_tensor = torch.tensor(U_T_trunc, dtype=torch.complex64)
+        x0_tau_plus_1 = torch.matmul(Hc_tau_plus_1, U_T_tensor)
+    # x0_tau_plus_1 = torch.matmul(x0_tau, A.t()) + w
     
     # 5. Generate Pilot Observations (QPSK)
     print("Generating pilot measurements...")
+    if MODE == 'spatial':
+        dim = TX_DIM[0] * TX_DIM[1]
+    elif MODE == 'modal':
+        dim = R_T
     M_real = (torch.randint(0, 2, size=(NUM_PILOTS, dim)).float() * 2 - 1) 
     M_imag = (torch.randint(0, 2, size=(NUM_PILOTS, dim)).float() * 2 - 1)
     M = (M_real + 1j * M_imag) / np.sqrt(2)
@@ -145,7 +160,7 @@ def main():
             "num_pilots": NUM_PILOTS,
             "snr_levels": SNR_LEVELS,
             "num_samples": NUM_TEST_SAMPLES,
-            "process_noise_var": ((1 - RHO**2) * x0_var)
+            "process_noise_var": ((1 - RHO**2) * spatial_var)
         },
         "true_A_matrix": A,                 # Storing true A just for reference
         "x0_tau": x0_tau,                   # Previous state
