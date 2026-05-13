@@ -16,7 +16,7 @@ RHO = 0.1034
 R_T = 64
 NUM_SAMPLES = 1000000
 CUDA = 0
-CHAN_MODE = 'spatial' # 'spatial' or 'modal'
+CHAN_MODE = 'modal' # 'spatial' or 'modal'
 NUM_PILOTS = 64
 
 # Training settings
@@ -36,7 +36,7 @@ T_DIFFUSION = 1000.0
 # --- Tunable Tracking Parameters ---
 NUM_TEST_SAMPLES = 3000
 NUM_SAMPLING_STEPS = 1000
-K_START = 30
+K_START = 110
 DYNAMIC_ETA = True
 if DYNAMIC_ETA: GUIDANCE_LAMBDA = 50
 else: GUIDANCE_LAMBDA = 1.2
@@ -135,6 +135,7 @@ elif MODE == 'test':
     # Calculate base signal power (needed for SNR conversions inside sampler)
     y_clean = torch.matmul(x0_tau_plus_1, M_matrix.t())
     sig_power = torch.mean(torch.abs(y_clean)**2).item()
+    physical_mean_complex = torch.mean(x0_tau, dim=0)
     
     
     nmse_results = []
@@ -151,6 +152,7 @@ elif MODE == 'test':
             rho=rho,
             eps_net=eps_net, 
             data_mean=data_mean, 
+            physical_mean_complex = physical_mean_complex, 
             data_std=data_std, 
             snr_db=snr, 
             sig_power=sig_power,

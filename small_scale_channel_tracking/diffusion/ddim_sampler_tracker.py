@@ -9,7 +9,7 @@ def real_to_complex_concat(x_real):
     return x_real[..., :dim] + 1j * x_real[..., dim:]
 
 def ddim_tracking_sampler(y_obs_complex, M_complex, x0_tau_complex, rho,
-                          eps_net, data_mean, data_std, snr_db, sig_power,
+                          eps_net, data_mean, physical_mean_complex, data_std, snr_db, sig_power,
                           num_steps=50, K_start=15, T_DIFFUSION=50.0,
                           beta_min=1e-4, beta_max=0.02, guidance_lambda=0.1, dynamic_eta=None,
                           device=None):
@@ -22,7 +22,8 @@ def ddim_tracking_sampler(y_obs_complex, M_complex, x0_tau_complex, rho,
     max_thred = 0.01
     
     # 1. Physical Prediction
-    x_pred_cplx = rho * x0_tau_complex
+    physical_mean_complex = 0
+    x_pred_cplx = rho * (x0_tau_complex - physical_mean_complex) + physical_mean_complex
     x_pred_real = complex_to_real_concat(x_pred_cplx)
     
     # Map to normalized latent space for the neural network

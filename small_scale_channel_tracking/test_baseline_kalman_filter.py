@@ -10,9 +10,9 @@ NUM_TEST_SAMPLES = 3000
 SNR_LEVELS = [-4, -2, 0, 2, 4, 6, 8, 10]
 RHO = 0.1034
 FREQ_GHZ = 12
-R_T = 38
-NUM_PILOTS = 38
-MODE = 'modal' # 'spatial' or 'modal'
+R_T = 64
+NUM_PILOTS = 64
+MODE = 'spatial' # 'spatial' or 'modal'
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 # Adjust to point to the newly generated dataset

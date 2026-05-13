@@ -133,7 +133,19 @@ def main():
         dim = R_T
     M_real = (torch.randint(0, 2, size=(NUM_PILOTS, dim)).float() * 2 - 1) 
     M_imag = (torch.randint(0, 2, size=(NUM_PILOTS, dim)).float() * 2 - 1)
-    M = (M_real + 1j * M_imag) / np.sqrt(2)
+    M_spatial = (M_real + 1j * M_imag) / np.sqrt(2)
+    
+    if MODE == 'spatial':
+        M = M_spatial
+    elif MODE == 'modal':
+        # Project the physical M matrix into the modal domain
+        # Math: M_modal = M_spatial * (U_pinv)^T
+        U_pinv_np = np.linalg.pinv(U_T_trunc) # Shape: (r_T, 64)
+        U_pinv_tensor = torch.tensor(U_pinv_np, dtype=torch.complex64)
+        
+        # M_spatial is (NUM_PILOTS, 64). U_pinv_tensor.t() is (64, r_T).
+        # Resulting M will be (NUM_PILOTS, r_T)
+        M = torch.matmul(M_spatial, U_pinv_tensor.t())
     
     # Clean received signal: y_clean = x0_tau_plus_1 * M^T
     y_clean = torch.matmul(x0_tau_plus_1, M.t()) # Shape: (3000, 38)
