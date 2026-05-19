@@ -26,7 +26,7 @@ SNR_LEVELS = [-4, -2, 0, 2, 4, 6, 8, 10]
 RHO = 0.1034       # Base temporal correlation
 OFF_DIAG_STD = 0.2 # Standard deviation of the off-diagonal leakage
 NUM_PILOTS = 64   # T >= r_T
-MODE = 'spatial' # 'spatial' or 'modal'
+MODE = 'modal' # 'spatial' or 'modal'
 
 # Input Paths
 CHANNEL_FILE = os.path.join(SCRIPT_DIR, "channel", f"channel_data_SC_{FREQ_GHZ}GHz_{TX_DIM[0]}x{TX_DIM[1]}Tx_{RX_DIM[0]}x{RX_DIM[1]}Rx_{NUM_TEST_SAMPLES}samples.mat")
@@ -107,15 +107,16 @@ def main():
     H_c_tensor = torch.squeeze(torch.tensor(H_c, dtype=torch.complex64))
     spatial_var = torch.var(H_c_tensor, dim=0)  ################
     # spatial_var = torch.ones(N_T)     
-    Q_std_spatial = torch.sqrt((1 - RHO**2) * spatial_var)  
+    # Q_std_spatial = torch.sqrt((1 - RHO**2) * spatial_var)  
     
-    # Generate spatial process noise w
-    w_real = torch.randn(NUM_TEST_SAMPLES, N_T)
-    w_imag = torch.randn(NUM_TEST_SAMPLES, N_T)
-    w_spatial = (w_real + 1j * w_imag) / np.sqrt(2) * Q_std_spatial
+    # # Generate spatial process noise w
+    # w_real = torch.randn(NUM_TEST_SAMPLES, N_T)
+    # w_imag = torch.randn(NUM_TEST_SAMPLES, N_T)
+    # w_spatial = (w_real + 1j * w_imag) / np.sqrt(2) * Q_std_spatial
     
     # Evolve the spatial channel first
-    Hc_tau_plus_1 = torch.matmul(H_c_tensor, A.t()) + w_spatial
+    # No process noise added. The uncertainty is strictly the spatial leakage inside A.
+    Hc_tau_plus_1 = torch.matmul(H_c_tensor, A.t())
     
     if MODE == 'spatial':
         x0_tau_plus_1 = Hc_tau_plus_1
@@ -125,30 +126,38 @@ def main():
         x0_tau_plus_1 = torch.matmul(Hc_tau_plus_1, U_T_tensor)
     # x0_tau_plus_1 = torch.matmul(x0_tau, A.t()) + w
     
-    # 5. Generate Pilot Observations (QPSK)
+# 5. Generate Pilot Observations (QPSK)
     print("Generating pilot measurements...")
+    
+    # 5a. Always generate the QPSK pilots in the tracker's native domain
     if MODE == 'spatial':
-        dim = TX_DIM[0] * TX_DIM[1]
+        dim = TX_DIM[0] * TX_DIM[1] # 64
     elif MODE == 'modal':
-        dim = R_T
+        dim = R_T # 38
+        
     M_real = (torch.randint(0, 2, size=(NUM_PILOTS, dim)).float() * 2 - 1) 
     M_imag = (torch.randint(0, 2, size=(NUM_PILOTS, dim)).float() * 2 - 1)
-    M_spatial = (M_real + 1j * M_imag) / np.sqrt(2)
+    M = (M_real + 1j * M_imag) / np.sqrt(2)
     
-    if MODE == 'spatial':
-        M = M_spatial
-    elif MODE == 'modal':
-        # Project the physical M matrix into the modal domain
-        # Math: M_modal = M_spatial * (U_pinv)^T
-        U_pinv_np = np.linalg.pinv(U_T_trunc) # Shape: (r_T, 64)
-        U_pinv_tensor = torch.tensor(U_pinv_np, dtype=torch.complex64)
+    # if MODE == 'spatial':
+    #     # Standard spatial transmission
+    #     M_tracker = M_base 
+    #     y_clean = torch.matmul(x0_tau_plus_1, M_tracker.t())
         
-        # M_spatial is (NUM_PILOTS, 64). U_pinv_tensor.t() is (64, r_T).
-        # Resulting M will be (NUM_PILOTS, r_T)
-        M = torch.matmul(M_spatial, U_pinv_tensor.t())
+    # elif MODE == 'modal':
+    #     # Math: M_spatial = M_modal * U_{T, r_T}^T
+    #     U_T_tensor = torch.tensor(U_T_trunc, dtype=torch.complex64)
+    #     M_spatial = torch.matmul(M_base, U_T_tensor.t()) # Shape: (NUM_PILOTS, 64)
+        
+    #     # Pass the physically precoded pilots through the TRUE SPATIAL channel (Hc_tau_plus_1)
+    #     # (3000, 64) @ (64, NUM_PILOTS) 
+    #     y_clean = torch.matmul(Hc_tau_plus_1, M_spatial.t()) 
+        
+    #     # The tracker only needs the modal pilots, it doesn't need to know about U_T
+    #     M_tracker = M_base
     
-    # Clean received signal: y_clean = x0_tau_plus_1 * M^T
-    y_clean = torch.matmul(x0_tau_plus_1, M.t()) # Shape: (3000, 38)
+    y_clean = torch.matmul(x0_tau_plus_1, M.t())
+    
     sig_power = torch.mean(torch.abs(y_clean)**2)
     
     # 6. Generate Noisy Observations for each SNR
@@ -162,7 +171,7 @@ def main():
         
         y_obs = y_clean + noise
         observations[snr] = y_obs
-        print(f"  Generated SNR = {snr:2d} dB")
+        # print(f"  Generated SNR = {snr:2d} dB")
         
     # 7. Pack and Save Dataset
     dataset = {

@@ -63,10 +63,11 @@ def run_kalman_filter_baseline():
     num_pilots = config["num_pilots"]
     sigma2_w = np.mean(np.var(dataset["x0_tau"].numpy(), axis=0)) * (1 - rho**2) #########
     # sigma2_w = (1 - rho**2)
-    if MODE == 'modal':
-        Q_cov = sigma2_w * (U_T_trunc.conj().T @ U_T_trunc)   #(1 - rho**2)
-    elif MODE == 'spatial':
-        Q_cov = sigma2_w * np.eye(U_T_trunc.shape[0])   #(1 - rho**2)
+    # if MODE == 'modal':
+    #     Q_cov = sigma2_w * (U_T_trunc.conj().T @ U_T_trunc)   #(1 - rho**2)
+    # elif MODE == 'spatial':
+    #     Q_cov = sigma2_w * np.eye(U_T_trunc.shape[0])   #(1 - rho**2)
+    Q_cov = sigma2_w * np.eye(U_T_trunc.shape[0])   #(1 - rho**2)
     
     # Base signal power to calculate noise variance for R matrix
     y_clean = x0_tau_plus_1 @ M.T
