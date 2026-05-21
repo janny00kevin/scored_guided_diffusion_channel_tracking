@@ -16,7 +16,7 @@ RHO = 0.1034
 R_T = 64
 NUM_SAMPLES = 1000000
 CUDA = 0
-CHAN_MODE = 'modal' # 'spatial' or 'modal'
+CHAN_MODE = 'spatial' # 'spatial' or 'modal'
 NUM_PILOTS = 64
 
 # Training settings
@@ -38,7 +38,9 @@ NUM_TEST_SAMPLES = 3000
 NUM_SAMPLING_STEPS = 1000
 K_START = 30
 DYNAMIC_ETA = True
-if DYNAMIC_ETA: GUIDANCE_LAMBDA = 50
+if DYNAMIC_ETA: 
+    if CHAN_MODE == 'spatial': GUIDANCE_LAMBDA = 40
+    elif CHAN_MODE == 'modal': GUIDANCE_LAMBDA = 110
 else: GUIDANCE_LAMBDA = 1.2
 # -----------------------------------
 if CHAN_MODE == 'spatial':

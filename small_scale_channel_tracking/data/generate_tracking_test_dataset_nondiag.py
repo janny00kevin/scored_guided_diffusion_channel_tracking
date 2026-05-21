@@ -119,11 +119,11 @@ def main():
     Hc_tau_plus_1 = torch.matmul(H_c_tensor, A.t())
     
     if MODE == 'spatial':
-        x0_tau_plus_1 = Hc_tau_plus_1
+        x0_tau_plus_1 = torch.matmul(H_c_tensor, A.t())
     elif MODE == 'modal':
         # Project the evolved spatial channel to modal domain
         U_T_tensor = torch.tensor(U_T_trunc, dtype=torch.complex64)
-        x0_tau_plus_1 = torch.matmul(Hc_tau_plus_1, U_T_tensor)
+        x0_tau_plus_1 = torch.matmul(torch.matmul(H_c_tensor, U_T_tensor), A.t())
     # x0_tau_plus_1 = torch.matmul(x0_tau, A.t()) + w
     
 # 5. Generate Pilot Observations (QPSK)
