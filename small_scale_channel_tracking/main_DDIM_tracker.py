@@ -17,7 +17,7 @@ R_T = 64
 NUM_SAMPLES = 1000000
 CUDA = 0
 CHAN_MODE = 'spatial' # 'spatial' or 'modal'
-NUM_PILOTS = 64*5
+NUM_PILOTS = 64
 
 # Training settings
 NUM_EPOCHS = 10000
@@ -38,7 +38,9 @@ NUM_TEST_SAMPLES = 3000
 NUM_SAMPLING_STEPS = 1000
 K_START = 30
 DYNAMIC_ETA = True
-if DYNAMIC_ETA: GUIDANCE_LAMBDA = 50
+if DYNAMIC_ETA: 
+    if CHAN_MODE == 'spatial': GUIDANCE_LAMBDA = 40
+    elif CHAN_MODE == 'modal': GUIDANCE_LAMBDA = 110
 else: GUIDANCE_LAMBDA = 1.2
 # -----------------------------------
 if CHAN_MODE == 'spatial':
@@ -116,8 +118,10 @@ elif MODE == 'test':
     eps_net.load_state_dict(checkpoint['model_state_dict'])
     eps_net.eval()
     
-    data_mean = checkpoint['data_mean'].to(device)
+    data_mean = checkpoint['data_mean'].to(device)        ##################
     data_std = checkpoint['data_std'].to(device)
+    # data_mean = torch.zeros_like(checkpoint['data_mean']).to(device)
+    # data_std = torch.ones_like(checkpoint['data_std']).to(device)
     
     # 2. Load Testing Data
     # Ensure NUM_TEST_SAMPLES = 3000 at the top of your file
@@ -133,6 +137,7 @@ elif MODE == 'test':
     # Calculate base signal power (needed for SNR conversions inside sampler)
     y_clean = torch.matmul(x0_tau_plus_1, M_matrix.t())
     sig_power = torch.mean(torch.abs(y_clean)**2).item()
+    physical_mean_complex = torch.mean(x0_tau, dim=0)
     
     
     nmse_results = []
@@ -149,6 +154,7 @@ elif MODE == 'test':
             rho=rho,
             eps_net=eps_net, 
             data_mean=data_mean, 
+            physical_mean_complex = physical_mean_complex, 
             data_std=data_std, 
             snr_db=snr, 
             sig_power=sig_power,

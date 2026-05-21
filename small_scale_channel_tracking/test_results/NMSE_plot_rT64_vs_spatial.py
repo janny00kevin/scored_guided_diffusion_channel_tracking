@@ -16,10 +16,10 @@ FILES = {
     # r"DDIM Tracker w/ fixed $\eta_k$ ($r_T=38$)": f"NMSE_DDIM_rT38_T38_{FREQ_GHZ}GHz_rho{RHO:.3f}_fixed_eta.mat", 
     # r"DDIM Tracker w/ varied $\eta_k$ ($r_T=38$)": f"NMSE_DDIM_rT38_T38_{FREQ_GHZ}GHz_rho{RHO:.3f}.mat",
     f"Kalman Filter ($r_T=64$)": f"NMSE_KF_rT64_T64_{FREQ_GHZ}GHz_rho{RHO:.3f}.mat",
-    r"DDIM Tracker w/ fixed $\eta_k$ ($r_T=64$)": f"NMSE_DDIM_rT64_T64_{FREQ_GHZ}GHz_rho{RHO:.3f}_fixed_eta.mat", 
+    # r"DDIM Tracker w/ fixed $\eta_k$ ($r_T=64$)": f"NMSE_DDIM_rT64_T64_{FREQ_GHZ}GHz_rho{RHO:.3f}_fixed_eta.mat", 
     r"DDIM Tracker w/ varied $\eta_k$ ($r_T=64$)": f"NMSE_DDIM_rT64_T64_{FREQ_GHZ}GHz_rho{RHO:.3f}.mat",
     f"Kalman Filter (spatial)": f"NMSE_KF_spatial_T64_{FREQ_GHZ}GHz_rho{RHO:.3f}.mat",
-    r"DDIM Tracker w/ fixed $\eta_k$ (spatial)": f"NMSE_DDIM_spatial_T64_{FREQ_GHZ}GHz_rho{RHO:.3f}_fixed_eta.mat", 
+    # r"DDIM Tracker w/ fixed $\eta_k$ (spatial)": f"NMSE_DDIM_spatial_T64_{FREQ_GHZ}GHz_rho{RHO:.3f}_fixed_eta.mat", 
     r"DDIM Tracker w/ varied $\eta_k$ (spatial)": f"NMSE_DDIM_spatial_T64_{FREQ_GHZ}GHz_rho{RHO:.3f}.mat",
 }
 
@@ -31,13 +31,13 @@ STYLES = {
         'linewidth': 2, 
         'markersize': 8
     },
-    r"DDIM Tracker w/ fixed $\eta_k$ ($r_T=64$)": {
-        'color': 'orange', 
-        'marker': 'o', 
-        'linestyle': '-',  
-        'linewidth': 2, 
-        'markersize': 8
-    },
+    # r"DDIM Tracker w/ fixed $\eta_k$ ($r_T=64$)": {
+    #     'color': 'orange', 
+    #     'marker': 'o', 
+    #     'linestyle': '-',  
+    #     'linewidth': 2, 
+    #     'markersize': 8
+    # },
     r"DDIM Tracker w/ varied $\eta_k$ ($r_T=64$)": {
         'color': 'green', 
         'marker': 'D', 
@@ -73,13 +73,13 @@ STYLES = {
         'linewidth': 2, 
         'markersize': 8
     },
-    r"DDIM Tracker w/ fixed $\eta_k$ (spatial)": {
-        'color': 'orange', 
-        'marker': 'o', 
-        'linestyle': ':',  
-        'linewidth': 2, 
-        'markersize': 8
-    },
+    # r"DDIM Tracker w/ fixed $\eta_k$ (spatial)": {
+    #     'color': 'orange', 
+    #     'marker': 'o', 
+    #     'linestyle': ':',  
+    #     'linewidth': 2, 
+    #     'markersize': 8
+    # },
     r"DDIM Tracker w/ varied $\eta_k$ (spatial)": {
         'color': 'green', 
         'marker': 'D', 
