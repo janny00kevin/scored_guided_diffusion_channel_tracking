@@ -17,7 +17,7 @@ R_T = 64
 NUM_SAMPLES = 1000000
 CUDA = 0
 CHAN_MODE = 'spatial' # 'spatial' or 'modal'
-NUM_PILOTS = 64
+NUM_PILOTS = 64*20
 
 # Training settings
 NUM_EPOCHS = 10000
