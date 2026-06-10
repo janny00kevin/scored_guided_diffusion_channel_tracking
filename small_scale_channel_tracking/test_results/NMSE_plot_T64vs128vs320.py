@@ -2,6 +2,7 @@ import matplotlib.pyplot as plt
 import os
 import scipy.io as sio
 import numpy as np
+from matplotlib.patches import Ellipse
 
 # =============================
 # 1. Configuration
@@ -113,11 +114,16 @@ def plot_and_save_metric(metric_type, title, ylabel, save_name_base, script_dir)
     """
     Plot and save .mat data for a single metric type.
     """
-    plt.figure(figsize=(8, 6))
+    fig, ax = plt.subplots(figsize=(8, 6)) # Changed to use ax for patch drawing
     data_found = False
 
     # For saving data for .mat export
     plot_data_export = {}
+    
+    # Store end points to draw ellipses around them later
+    # Format: { 'T_value': [ (x1, y1), (x2, y2) ] }
+    group_points = {'64': [], '128': [], '320': []}
+    target_snr = 10  # The SNR value where we will draw the circle/ellipse
     
     # get corresponding data key
     data_key = MAT_KEYS[metric_type]
@@ -142,7 +148,24 @@ def plot_and_save_metric(metric_type, title, ylabel, save_name_base, script_dir)
         data_found = True
         style = STYLES.get(label, {'linestyle': '-', 'marker': 'o'}) 
         legend_label = style.pop('label', label)
-        plt.plot(snrs, values, label=legend_label, **style)
+        ax.plot(snrs, values, label=legend_label, **style)
+
+        # ---------------------------------------------------------
+        # NEW: Find the y-value at our target SNR for grouping
+        # ---------------------------------------------------------
+        try:
+            idx = np.where(snrs == target_snr)[0][0]
+            y_val = values[idx]
+            
+            # Determine which T group this belongs to based on the label
+            if "T=64" in label:
+                group_points['64'].append(y_val)
+            elif "T=128" in label:
+                group_points['128'].append(y_val)
+            elif "T=320" in label:
+                group_points['320'].append(y_val)
+        except IndexError:
+            pass # target_snr not found in this array
 
         # prepare data for .mat export
         safe_label = label.replace(" ", "_").replace("-", "_")
@@ -157,14 +180,45 @@ def plot_and_save_metric(metric_type, title, ylabel, save_name_base, script_dir)
         plt.close()
         return
 
-    plt.title(title, fontsize=16, fontweight='bold')
-    plt.xlabel('SNR (dB)', fontsize=14)
-    plt.ylabel(ylabel, fontsize=14)
-    plt.grid(True, linestyle='--', alpha=0.7)
-    plt.legend(fontsize=12, loc='best')
+    # ---------------------------------------------------------
+    # NEW: Draw Ellipses and Add Text Labels
+    # ---------------------------------------------------------
+    # Define colors for the groups
+    group_colors = {'64': 'red', '128': 'red', '320': 'red'}
+    
+    for t_val, y_vals in group_points.items():
+        if len(y_vals) >= 2: # We need both KF and DDIM to draw a circle around them
+            # Calculate the center of the ellipse
+            y_center = np.mean(y_vals)
+            # Calculate the height of the ellipse to cover both points
+            y_diff = abs(max(y_vals) - min(y_vals))
+            
+            # Add some padding to width and height so it looks like a nice circle/ellipse
+            ellipse_width = 1.5   # Spread across the x-axis
+            ellipse_height = y_diff + 0.8  # Spread across the y-axis
+            
+            # Draw the Ellipse
+            ellipse = Ellipse((target_snr, y_center), width=ellipse_width, height=ellipse_height,
+                              fill=False, edgecolor=group_colors[t_val], linestyle='-', linewidth=1.5, alpha=0.8)
+            ax.add_patch(ellipse)
+            
+            # Add the "T=X" Text label right next to the ellipse
+            ax.text(target_snr + 1.0, y_center, f"T={t_val}", color=group_colors[t_val], 
+                    fontsize=12, fontweight='bold', va='center')
+
+
+    ax.set_title(title, fontsize=16, fontweight='bold')
+    ax.set_xlabel('SNR (dB)', fontsize=14)
+    ax.set_ylabel(ylabel, fontsize=14)
+    ax.grid(True, linestyle='--', alpha=0.7)
+    
+    # Put legend in the lower left so it doesn't overlap with the new circles
+    ax.legend(fontsize=12, loc='lower left') 
     
     if 'last_valid_snrs' in locals():
-        plt.xticks(last_valid_snrs)
+        # Extend x-axis slightly so the circles and text aren't cut off at the edge
+        ax.set_xlim([min(last_valid_snrs)-0.5, max(last_valid_snrs)+2.5])
+        ax.set_xticks(last_valid_snrs)
         
     plt.tight_layout()
     
