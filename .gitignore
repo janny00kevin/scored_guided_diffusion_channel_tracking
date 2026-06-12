@@ -31,3 +31,5 @@ small_scale_channel_tracking/data/HFSS/Z_result/12GHz_patch_8_8.tab
 *.auto
 *.pt
 
+Z_result_Patch.m
+z_extraction_38GHz.py
