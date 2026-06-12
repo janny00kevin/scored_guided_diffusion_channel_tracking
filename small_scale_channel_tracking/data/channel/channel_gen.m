@@ -39,5 +39,5 @@ totalTime = toc;
 fprintf('Simulation took %.2f minutes.\n', totalTime/60);
 
 filename = sprintf('channel_data_SC_%.0fGHz_%dx%dTx_%dx%dRx_%dsamples.mat', ...
-    f_c, nTxxy(1), nTxxy(2), nRxxy(1), nRxxy(2), num_samples);
+    floor(f_c), nTxxy(1), nTxxy(2), nRxxy(1), nRxxy(2), num_samples);
 save(filename,'H_samples','-v7.3');
