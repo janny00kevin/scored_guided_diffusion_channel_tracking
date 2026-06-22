@@ -10,9 +10,9 @@ NUM_TEST_SAMPLES = 3000
 SNR_LEVELS = [-4, -2, 0, 2, 4, 6, 8, 10]
 RHO = 0.1034
 FREQ_GHZ = 12
-R_T = 64
-NUM_PILOTS = 64*20
-MODE = 'spatial' # 'spatial' or 'modal'
+R_T = 60
+NUM_PILOTS = 64*5
+MODE = 'modal' # 'spatial' or 'modal'
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 # Adjust to point to the newly generated dataset
@@ -67,7 +67,7 @@ def run_kalman_filter_baseline():
     #     Q_cov = sigma2_w * (U_T_trunc.conj().T @ U_T_trunc)   #(1 - rho**2)
     # elif MODE == 'spatial':
     #     Q_cov = sigma2_w * np.eye(U_T_trunc.shape[0])   #(1 - rho**2)
-    Q_cov = sigma2_w * np.eye(U_T_trunc.shape[0])   #(1 - rho**2)
+    Q_cov = sigma2_w * np.eye(U_T_trunc.shape[1])   #(1 - rho**2)
     
     # Base signal power to calculate noise variance for R matrix
     y_clean = x0_tau_plus_1 @ M.T

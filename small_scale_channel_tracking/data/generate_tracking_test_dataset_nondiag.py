@@ -18,15 +18,15 @@ from utils.channel_utils import calculate_coupling_matrix
 FREQ_GHZ = 12
 TX_DIM = [8, 8]
 RX_DIM = [1, 1]
-R_T = 64
+R_T = 60
 NUM_TEST_SAMPLES = 3000
 SNR_LEVELS = [-4, -2, 0, 2, 4, 6, 8, 10]
 
 # Tracking Physics Parameters
 RHO = 0.1034       # Base temporal correlation
 OFF_DIAG_STD = 0.2 # Standard deviation of the off-diagonal leakage
-NUM_PILOTS = 64*20   # T >= r_T
-MODE = 'spatial' # 'spatial' or 'modal'
+NUM_PILOTS = 64*5   # T >= r_T
+MODE = 'modal' # 'spatial' or 'modal'
 
 # Input Paths
 CHANNEL_FILE = os.path.join(SCRIPT_DIR, "channel", f"channel_data_SC_{FREQ_GHZ}GHz_{TX_DIM[0]}x{TX_DIM[1]}Tx_{RX_DIM[0]}x{RX_DIM[1]}Rx_{NUM_TEST_SAMPLES}samples.mat")
@@ -82,7 +82,10 @@ def main():
     torch.manual_seed(0) # Fix seed for reproducibility across all methods
     
     # Create the non-diagonal transition matrix A
-    dim = TX_DIM[0] * TX_DIM[1]
+    if MODE == 'spatial':
+        dim = TX_DIM[0] * TX_DIM[1] # 64
+    elif MODE == 'modal':
+        dim = R_T 
     A = torch.eye(dim, dtype=torch.complex64) * RHO
     noise_real = torch.randn(dim, dim)
     noise_imag = torch.randn(dim, dim)
@@ -100,8 +103,8 @@ def main():
     else:
         print(f"  Matrix A is stable. Spectral radius: {max_eig:.4f}")
 
-    # Always use spatial dimensions for evolution
-    N_T = TX_DIM[0] * TX_DIM[1] # 64
+    # # Always use spatial dimensions for evolution
+    # N_T = TX_DIM[0] * TX_DIM[1] # 64
     
     # Calculate variance for spatial process noise Q
     H_c_tensor = torch.squeeze(torch.tensor(H_c, dtype=torch.complex64))
@@ -116,7 +119,7 @@ def main():
     
     # Evolve the spatial channel first
     # No process noise added. The uncertainty is strictly the spatial leakage inside A.
-    Hc_tau_plus_1 = torch.matmul(H_c_tensor, A.t())
+    # Hc_tau_plus_1 = torch.matmul(H_c_tensor, A.t())
     
     if MODE == 'spatial':
         x0_tau_plus_1 = torch.matmul(H_c_tensor, A.t())

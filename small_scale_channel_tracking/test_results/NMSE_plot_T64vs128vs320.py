@@ -10,19 +10,28 @@ from matplotlib.patches import Ellipse
 FREQ_GHZ = 12
 RHO = 0.1034
 NUM_PILOTS = 64
+R_T = 60
+mode = 'modal' # 'spatial' or 'modal'
 
 # Load .mat files to plot
-FILES = {
-    f"Kalman Filter (T=64)": f"NMSE_KF_spatial_T64_{FREQ_GHZ}GHz_rho{RHO:.3f}.mat",
-    # r"DDIM Tracker w/ fixed $\eta_k$ ($r_T=38$)": f"NMSE_DDIM_rT38_T38_{FREQ_GHZ}GHz_rho{RHO:.3f}_fixed_eta.mat", 
-    r"DDIM Tracker w/ varied $\eta_k$ (T=64)": f"NMSE_DDIM_spatial_T64_{FREQ_GHZ}GHz_rho{RHO:.3f}.mat",
-    f"Kalman Filter (T=128)": f"NMSE_KF_spatial_T128_{FREQ_GHZ}GHz_rho{RHO:.3f}.mat",
-    # r"DDIM Tracker w/ fixed $\eta_k$ ($r_T=64$)": f"NMSE_DDIM_rT64_T64_{FREQ_GHZ}GHz_rho{RHO:.3f}_fixed_eta.mat", 
-    r"DDIM Tracker w/ varied $\eta_k$ (T=128)": f"NMSE_DDIM_spatial_T128_{FREQ_GHZ}GHz_rho{RHO:.3f}.mat",
-    f"Kalman Filter (T=320)": f"NMSE_KF_spatial_T320_{FREQ_GHZ}GHz_rho{RHO:.3f}.mat",
-    # r"DDIM Tracker w/ fixed $\eta_k$ (spatial)": f"NMSE_DDIM_spatial_T64_{FREQ_GHZ}GHz_rho{RHO:.3f}_fixed_eta.mat", 
-    r"DDIM Tracker w/ varied $\eta_k$ (T=320)": f"NMSE_DDIM_spatial_T320_{FREQ_GHZ}GHz_rho{RHO:.3f}.mat",
-}
+if mode == 'spatial':
+    FILES = {
+        f"Kalman Filter (T=64)": f"NMSE_KF_spatial_T64_{FREQ_GHZ}GHz_rho{RHO:.3f}.mat",
+        r"DDIM Tracker w/ varied $\eta_k$ (T=64)": f"NMSE_DDIM_spatial_T64_{FREQ_GHZ}GHz_rho{RHO:.3f}.mat",
+        f"Kalman Filter (T=128)": f"NMSE_KF_spatial_T128_{FREQ_GHZ}GHz_rho{RHO:.3f}.mat",
+        r"DDIM Tracker w/ varied $\eta_k$ (T=128)": f"NMSE_DDIM_spatial_T128_{FREQ_GHZ}GHz_rho{RHO:.3f}.mat",
+        f"Kalman Filter (T=320)": f"NMSE_KF_spatial_T320_{FREQ_GHZ}GHz_rho{RHO:.3f}.mat",
+        r"DDIM Tracker w/ varied $\eta_k$ (T=320)": f"NMSE_DDIM_spatial_T320_{FREQ_GHZ}GHz_rho{RHO:.3f}.mat",
+    }
+elif mode == 'modal':
+    FILES = {
+        f"Kalman Filter (T=64)": f"NMSE_KF_rT{R_T}_T64_{FREQ_GHZ}GHz_rho{RHO:.3f}.mat",
+        r"DDIM Tracker w/ varied $\eta_k$ (T=64)": f"NMSE_DDIM_rT{R_T}_T64_{FREQ_GHZ}GHz_rho{RHO:.3f}.mat",
+        f"Kalman Filter (T=128)": f"NMSE_KF_rT{R_T}_T128_{FREQ_GHZ}GHz_rho{RHO:.3f}.mat",
+        r"DDIM Tracker w/ varied $\eta_k$ (T=128)": f"NMSE_DDIM_rT{R_T}_T128_{FREQ_GHZ}GHz_rho{RHO:.3f}.mat",
+        f"Kalman Filter (T=320)": f"NMSE_KF_rT{R_T}_T320_{FREQ_GHZ}GHz_rho{RHO:.3f}.mat", 
+        r"DDIM Tracker w/ varied $\eta_k$ (T=320)": f"NMSE_DDIM_rT{R_T}_T320_{FREQ_GHZ}GHz_rho{RHO:.3f}.mat",
+    }
 
 STYLES = {
     "Kalman Filter (T=64)": {
@@ -244,12 +253,17 @@ def main():
     script_dir = os.path.dirname(os.path.abspath(__file__))
     print("[Info] Generating tracking plots...")
 
+    if mode == 'spatial':
+        save_name_base = f"NMSE_Tracker_{FREQ_GHZ}GHz_spatial_rho{RHO:.3f}_T64vs128vs320"
+    elif mode == 'modal':
+        save_name_base = f"NMSE_Tracker_{FREQ_GHZ}GHz_rT{R_T}_rho{RHO:.3f}_T64vs128vs320"
+
     # Plot Tracking NMSE (x0 state)
     plot_and_save_metric(
         metric_type="x0",
         title="Channel Tracking Performance",
         ylabel="Tracking NMSE (dB)",
-        save_name_base=f"NMSE_Tracker_{FREQ_GHZ}GHz_rho{RHO:.3f}_T64vs128vs320",
+        save_name_base=save_name_base,
         script_dir=script_dir
     )
 

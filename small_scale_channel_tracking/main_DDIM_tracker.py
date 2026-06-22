@@ -16,8 +16,8 @@ RHO = 0.1034
 R_T = 64
 NUM_SAMPLES = 1000000
 CUDA = 0
-CHAN_MODE = 'spatial' # 'spatial' or 'modal'
-NUM_PILOTS = 64*20
+CHAN_MODE = 'modal' # 'spatial' or 'modal'
+NUM_PILOTS = 64*5
 
 # Training settings
 NUM_EPOCHS = 10000
@@ -25,7 +25,7 @@ TRAIN_BATCH_SIZE = 4096
 LR = 1e-3
 MODEL_TYPE = 'mlp'
 VAL_SPLIT = 0.1
-PATIENCE = 1
+PATIENCE = 10
 
 # Diffusion Process Settings
 BETA_MIN = 1e-4
@@ -40,7 +40,12 @@ K_START = 30
 DYNAMIC_ETA = True
 if DYNAMIC_ETA: 
     if CHAN_MODE == 'spatial': GUIDANCE_LAMBDA = 40
-    elif CHAN_MODE == 'modal': GUIDANCE_LAMBDA = 110
+    elif CHAN_MODE == 'modal': 
+        if FREQ_GHZ == 12 and R_T == 64: GUIDANCE_LAMBDA = 110
+        elif FREQ_GHZ == 12 and R_T == 60: 
+            if NUM_PILOTS == 64 or NUM_PILOTS == 128: GUIDANCE_LAMBDA = 70
+            elif NUM_PILOTS == 320: GUIDANCE_LAMBDA = 30
+            
 else: GUIDANCE_LAMBDA = 1.2
 # -----------------------------------
 if CHAN_MODE == 'spatial':
