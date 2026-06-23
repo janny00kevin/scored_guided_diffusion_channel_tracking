@@ -16,7 +16,7 @@ RHO = 0.1034
 R_T = 64
 NUM_SAMPLES = 1000000
 CUDA = 0
-CHAN_MODE = 'modal' # 'spatial' or 'modal'
+CHAN_MODE = 'spatial' # 'spatial' or 'modal'
 NUM_PILOTS = 64*5
 
 # Training settings
@@ -41,10 +41,11 @@ DYNAMIC_ETA = True
 if DYNAMIC_ETA: 
     if CHAN_MODE == 'spatial': GUIDANCE_LAMBDA = 40
     elif CHAN_MODE == 'modal': 
-        if FREQ_GHZ == 12 and R_T == 64: GUIDANCE_LAMBDA = 110
+        if FREQ_GHZ == 12 and R_T == 64: GUIDANCE_LAMBDA = 100
         elif FREQ_GHZ == 12 and R_T == 60: 
-            if NUM_PILOTS == 64 or NUM_PILOTS == 128: GUIDANCE_LAMBDA = 70
-            elif NUM_PILOTS == 320: GUIDANCE_LAMBDA = 30
+            if NUM_PILOTS == 64 : GUIDANCE_LAMBDA = 70
+            elif NUM_PILOTS == 128: GUIDANCE_LAMBDA = 70
+            elif NUM_PILOTS == 320: GUIDANCE_LAMBDA = 110
             
 else: GUIDANCE_LAMBDA = 1.2
 # -----------------------------------
@@ -107,6 +108,56 @@ elif MODE == 'test':
     from models.epsnet_mlp import EpsNetMLP
     
     # print("\n[Info] Initializing Tracking Inference Stage...")
+
+    # def regularized_dc_update(y_obs, M, x_prior, sigma_n2, dc_reg=0.1):
+    #     """
+    #     Regularized data-consistency update.
+
+    #     Observation model:
+    #         y = x @ M.T
+
+    #     Solves:
+    #         min_x ||y - x M.T||^2 / sigma_n2 + lambda ||x - x_prior||^2
+
+    #     dc_reg:
+    #         smaller -> closer to LS
+    #         larger  -> closer to DDIM prior
+    #     """
+    #     D = M.shape[1]
+    #     device = M.device
+    #     dtype = M.dtype
+
+    #     sigma_eff = max(float(sigma_n2), 0.01)
+
+    #     I = torch.eye(D, dtype=dtype, device=device)
+
+    #     gram = M.conj().t() @ M / sigma_eff
+
+    #     gram_scale = torch.real(torch.trace(gram)) / D
+    #     lam = dc_reg * gram_scale
+
+    #     A = gram + lam * I
+
+    #     B = M.conj().t() @ y_obs.t() / sigma_eff + lam * x_prior.t()
+
+    #     x_dc = torch.linalg.solve(A, B).t()
+
+    #     return x_dc
+
+    # def nmse_db_complex(x_true, x_hat):
+    #     """
+    #     Compute NMSE in dB for complex-valued tensors.
+
+    #     x_true: ground-truth complex channel, shape [N, D]
+    #     x_hat : estimated complex channel, shape [N, D]
+
+    #     NMSE = E[||x_true - x_hat||^2] / E[||x_true||^2]
+    #     NMSE_dB = 10 log10(NMSE)
+    #     """
+    #     mse = torch.mean(torch.sum(torch.abs(x_true - x_hat) ** 2, dim=1))
+    #     ref = torch.mean(torch.sum(torch.abs(x_true) ** 2, dim=1))
+    #     nmse = mse / ref
+    #     return 10.0 * torch.log10(nmse).item()
     
     # 1. Load Trained Model
     weights_path = os.path.join(script_dir, "weights", MODEL_WEIGHT_FILE_NAME)
@@ -172,6 +223,26 @@ elif MODE == 'test':
             dynamic_eta=DYNAMIC_ETA, 
             device=device
         )
+
+        # sigma_n2 = sig_power * (10 ** (-snr / 10.0))
+
+        # if CHAN_MODE == "modal" and NUM_PILOTS == 320 and R_T == 64:
+        #     for dc_reg in [0.01, 0.03, 0.1, 0.3, 1.0]:
+        #         x_dc = regularized_dc_update(
+        #             y_obs=y_obs,
+        #             M=M_matrix,
+        #             x_prior=x0_est,
+        #             sigma_n2=sigma_n2,
+        #             dc_reg=dc_reg
+        #         )
+
+        #         dc_nmse = nmse_db_complex(x0_tau_plus_1, x_dc)
+
+        #         print(
+        #             f"[Post-DDIM DC] SNR={snr:3d} dB | "
+        #             f"dc_reg={dc_reg:.2e} | "
+        #             f"DC NMSE={dc_nmse:7.2f} dB"
+        #         )
         
         # 4. Calculate Tracking NMSE
         mse = torch.mean(torch.norm(x0_tau_plus_1 - x0_est, dim=1)**2)
@@ -203,9 +274,9 @@ elif MODE == 'test':
     res_path = os.path.join(script_dir, "test_results", "NMSE_raw_mats")
     os.makedirs(res_path, exist_ok=True)
     
-    sio.savemat(os.path.join(res_path, res_filename), {
-        'snr_range': np.array(config["snr_levels"]),
-        'x0_nmse': np.array(nmse_results)
-    })
+    # sio.savemat(os.path.join(res_path, res_filename), {
+    #     'snr_range': np.array(config["snr_levels"]),
+    #     'x0_nmse': np.array(nmse_results)
+    # })
     
     # print(f"[Success] Tracking Results saved to {res_filename}")
