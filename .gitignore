@@ -26,6 +26,9 @@ small_scale_channel_tracking/data/HFSS/AnsysEM_Backup
 small_scale_channel_tracking/data/HFSS/RingAnt&ProbeBLC.aedtresults
 small_scale_channel_tracking/data/HFSS/Z_result/.12GHz_patch_8_8.tab.swp
 small_scale_channel_tracking/data/HFSS/Z_result/12GHz_patch_8_8.tab
+small_scale_channel_tracking/data/HFSS/12GHz_patch.aedt.batchinfo/
+small_scale_channel_tracking/data/HFSS/12GHz_patch.aedt.q
+small_scale_channel_tracking/data/HFSS/12GHz_patch.log
 *.aedt
 *.lock
 *.auto

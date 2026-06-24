@@ -13,11 +13,11 @@ FREQ_GHZ = 12
 TX_DIM = [8, 8]
 RX_DIM = [1, 1]
 RHO = 0.1034
-R_T = 64
+R_T = 60
 NUM_SAMPLES = 1000000
 CUDA = 0
 CHAN_MODE = 'spatial' # 'spatial' or 'modal'
-NUM_PILOTS = 64*5
+NUM_PILOTS = 64*1
 
 # Training settings
 NUM_EPOCHS = 10000
@@ -39,13 +39,10 @@ NUM_SAMPLING_STEPS = 1000
 K_START = 30
 DYNAMIC_ETA = True
 if DYNAMIC_ETA: 
-    if CHAN_MODE == 'spatial': GUIDANCE_LAMBDA = 40
+    if CHAN_MODE == 'spatial': GUIDANCE_LAMBDA = 8e-3
     elif CHAN_MODE == 'modal': 
-        if FREQ_GHZ == 12 and R_T == 64: GUIDANCE_LAMBDA = 100
-        elif FREQ_GHZ == 12 and R_T == 60: 
-            if NUM_PILOTS == 64 : GUIDANCE_LAMBDA = 70
-            elif NUM_PILOTS == 128: GUIDANCE_LAMBDA = 70
-            elif NUM_PILOTS == 320: GUIDANCE_LAMBDA = 110
+        if FREQ_GHZ == 12 and R_T == 64: GUIDANCE_LAMBDA = 9e-3
+        elif FREQ_GHZ == 12 and R_T == 60: GUIDANCE_LAMBDA = 9e-3
             
 else: GUIDANCE_LAMBDA = 1.2
 # -----------------------------------
@@ -266,17 +263,17 @@ elif MODE == 'test':
     
     # 5. Save Results
     if CHAN_MODE == 'spatial':
-        if DYNAMIC_ETA: res_filename = f"NMSE_DDIM_spatial_T{NUM_PILOTS}_{FREQ_GHZ}GHz_rho{RHO:.3f}.mat"
+        if DYNAMIC_ETA: res_filename = f"NMSE_DDIM_spatial_T{NUM_PILOTS}_{FREQ_GHZ}GHz_rho{RHO:.3f}_pg.mat"
         else: res_filename = f"NMSE_DDIM_spatial_T{NUM_PILOTS}_{FREQ_GHZ}GHz_rho{RHO:.3f}_fixed_eta.mat"
     elif CHAN_MODE == 'modal':
-        if DYNAMIC_ETA: res_filename = f"NMSE_DDIM_rT{R_T}_T{NUM_PILOTS}_{FREQ_GHZ}GHz_rho{RHO:.3f}.mat"
+        if DYNAMIC_ETA: res_filename = f"NMSE_DDIM_rT{R_T}_T{NUM_PILOTS}_{FREQ_GHZ}GHz_rho{RHO:.3f}_pg.mat"
         else: res_filename = f"NMSE_DDIM_rT{R_T}_T{NUM_PILOTS}_{FREQ_GHZ}GHz_rho{RHO:.3f}_fixed_eta.mat"
     res_path = os.path.join(script_dir, "test_results", "NMSE_raw_mats")
     os.makedirs(res_path, exist_ok=True)
     
-    # sio.savemat(os.path.join(res_path, res_filename), {
-    #     'snr_range': np.array(config["snr_levels"]),
-    #     'x0_nmse': np.array(nmse_results)
-    # })
+    sio.savemat(os.path.join(res_path, res_filename), {
+        'snr_range': np.array(config["snr_levels"]),
+        'x0_nmse': np.array(nmse_results)
+    })
     
     # print(f"[Success] Tracking Results saved to {res_filename}")

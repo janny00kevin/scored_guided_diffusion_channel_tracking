@@ -70,53 +70,15 @@ def ddim_tracking_sampler(y_obs_complex, M_complex, x0_tau_complex, rho,
             grad_cplx = torch.matmul(err_cplx, M_complex.conj()) / max(sigma_n2, max_thred)
             
             # Map complex gradient back to normalized real space (Chain Rule)
-            def complex_to_real_matrix(M):
-                Mr = M.real
-                Mi = M.imag
-                top = torch.cat([Mr, -Mi], dim=1)
-                bot = torch.cat([Mi,  Mr], dim=1)
-                return torch.cat([top, bot], dim=0)
-
-
-            grad_real = complex_to_real_concat(grad_cplx)
-
-            # Gradient with respect to normalized variable u:
-            # x_real = data_mean + data_std * u
-            # therefore grad_u = data_std * grad_x
-            grad_norm = grad_real * data_std
-
-            # Build effective real measurement matrix in normalized coordinates.
-            # This is the matrix that DDIM actually feels.
-            M_real = complex_to_real_matrix(M_complex)
-            std_vec = data_std.flatten()
-
-            M_eff = M_real * std_vec[None, :]
-
-            sigma_eff = max(float(sigma_n2), 0.01)
-
-            # Diagonal Hessian approximation of the negative log-likelihood:
-            # H ≈ M_eff^T M_eff / sigma_eff
-            diag_H = torch.sum(M_eff.abs() ** 2, dim=0) / sigma_eff
-            diag_H = torch.clamp(diag_H, min=1e-8)
-
-            # Damping prevents excessive updates in weakly observed coordinates.
-            # Start with 0.1, then try 0.03 and 0.3.
-            damping = 0.1
-            damp = damping * torch.mean(diag_H)
-
-            # Jacobi-preconditioned likelihood gradient.
-            grad_precond = grad_norm / (diag_H[None, :] + damp)
-
-            # Normalize average scale so eta remains interpretable.
-            scale_restore = torch.mean(diag_H + damp)
-            grad_precond = grad_precond * scale_restore
+            grad_x_real = complex_to_real_concat(grad_cplx)
+            x0_hat_real = x0_hat_norm * data_std + data_mean
 
             if dynamic_eta is True:
-                guidance_step = guidance_lambda * sqrt_1m_a_cur * grad_precond
+                x0_guided_real = x0_hat_real + guidance_lambda * sqrt_1m_a_cur * grad_x_real
             else:
-                guidance_step = guidance_lambda * grad_precond
+                x0_guided_real = x0_hat_real + guidance_lambda * grad_x_real
 
-            x0_hat_guided_norm = x0_hat_norm + guidance_step
+            x0_hat_guided_norm = (x0_guided_real - data_mean) / data_std
             
             # Recalculate equivalent noise to step down properly
             eps_guided = (x_t - sqrt_a_cur * x0_hat_guided_norm) / (sqrt_1m_a_cur + 1e-12)
@@ -136,12 +98,16 @@ def ddim_tracking_sampler(y_obs_complex, M_complex, x0_tau_complex, rho,
         x0_hat_phys_cplx = real_to_complex_concat(x0_hat_phys_real)
         err_cplx = y_obs_complex - torch.matmul(x0_hat_phys_cplx, M_complex.t())
         grad_cplx = torch.matmul(err_cplx, M_complex.conj()) / max(sigma_n2, max_thred)
-        grad_norm = complex_to_real_concat(grad_cplx) * data_std
-        
+        grad_x_real = complex_to_real_concat(grad_cplx)
+
+        x0_hat_real = x0_hat_norm * data_std + data_mean
+
         if dynamic_eta is True:
-            x0_hat_final_guided_norm = x0_hat_final_norm + guidance_lambda * sqrt_1m_a_cur * grad_norm
-        elif dynamic_eta is False:
-            x0_hat_final_guided_norm = x0_hat_final_norm + guidance_lambda * grad_norm
+            x0_guided_real = x0_hat_real + guidance_lambda * sqrt_1m_a_cur * grad_x_real
+        else:
+            x0_guided_real = x0_hat_real + guidance_lambda * grad_x_real
+
+        x0_hat_final_guided_norm = (x0_guided_real - data_mean) / data_std
 
         # Output final physical complex state
         x0_final_phys_real = x0_hat_final_guided_norm * data_std + data_mean

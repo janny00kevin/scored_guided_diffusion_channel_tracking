@@ -18,14 +18,14 @@ from utils.channel_utils import calculate_coupling_matrix
 FREQ_GHZ = 12
 TX_DIM = [8, 8]
 RX_DIM = [1, 1]
-R_T = 60
+R_T = 64
 NUM_TEST_SAMPLES = 3000
 SNR_LEVELS = [-4, -2, 0, 2, 4, 6, 8, 10]
 
 # Tracking Physics Parameters
 RHO = 0.1034       # Base temporal correlation
 OFF_DIAG_STD = 0.2 # Standard deviation of the off-diagonal leakage
-NUM_PILOTS = 64*5   # T >= r_T
+NUM_PILOTS = 64*2   # T >= r_T
 MODE = 'modal' # 'spatial' or 'modal'
 
 # Input Paths
