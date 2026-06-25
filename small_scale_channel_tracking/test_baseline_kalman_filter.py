@@ -8,9 +8,10 @@ import scipy.io
 # ==========================================
 NUM_TEST_SAMPLES = 3000
 SNR_LEVELS = [-4, -2, 0, 2, 4, 6, 8, 10]
-RHO = 0.1034
-FREQ_GHZ = 12
-R_T = 64
+FREQ_GHZ = 38
+if FREQ_GHZ == 12: RHO = 0.1034
+elif FREQ_GHZ == 38: RHO = 0.0001
+R_T = 54
 NUM_PILOTS = 64*5
 MODE = 'modal' # 'spatial' or 'modal'
 

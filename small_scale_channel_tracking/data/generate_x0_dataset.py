@@ -16,8 +16,8 @@ from utils.channel_utils import calculate_coupling_matrix
 # ==========================================
 # 1. Configuration
 # ==========================================
-FREQ_GHZ = 12.45
-R_T = 60
+FREQ_GHZ = 38
+R_T = 54
 NUM_SAMPLES = 1000000  # 1000000 or 3000
 TX_DIM = [8, 8]
 RX_DIM = [1, 1]

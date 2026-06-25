@@ -7,11 +7,12 @@ from matplotlib.patches import Ellipse
 # =============================
 # 1. Configuration
 # =============================
-FREQ_GHZ = 12
-RHO = 0.1034
-NUM_PILOTS = 64
-R_T = 60
-mode = 'spatial' # 'spatial' or 'modal'
+FREQ_GHZ = 38
+if FREQ_GHZ == 12: RHO = 0.1034
+elif FREQ_GHZ == 38: RHO = 0.0001
+# NUM_PILOTS = 64
+R_T = 64
+mode = 'modal' # 'spatial' or 'modal'
 
 # Load .mat files to plot
 if mode == 'spatial':
