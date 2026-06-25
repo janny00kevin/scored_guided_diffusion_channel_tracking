@@ -9,15 +9,16 @@ RUN_ID = 2
 MODE = {1: 'train', 2: 'test'}.get(RUN_ID, 'train')
 
 # Scenario Configs
-FREQ_GHZ = 12
+FREQ_GHZ = 38
 TX_DIM = [8, 8]
 RX_DIM = [1, 1]
-RHO = 0.1034
+if FREQ_GHZ == 12: RHO = 0.1034
+elif FREQ_GHZ == 38: RHO = 0.0001
 R_T = 64
 NUM_SAMPLES = 1000000
-CUDA = 0
-CHAN_MODE = 'spatial' # 'spatial' or 'modal'
-NUM_PILOTS = 64*20
+CUDA = 1
+CHAN_MODE = 'modal' # 'spatial' or 'modal'
+NUM_PILOTS = 64*5
 
 # Training settings
 NUM_EPOCHS = 10000
@@ -25,7 +26,7 @@ TRAIN_BATCH_SIZE = 4096
 LR = 1e-3
 MODEL_TYPE = 'mlp'
 VAL_SPLIT = 0.1
-PATIENCE = 1
+PATIENCE = 10
 
 # Diffusion Process Settings
 BETA_MIN = 1e-4
@@ -39,8 +40,12 @@ NUM_SAMPLING_STEPS = 1000
 K_START = 30
 DYNAMIC_ETA = True
 if DYNAMIC_ETA: 
-    if CHAN_MODE == 'spatial': GUIDANCE_LAMBDA = 40
-    elif CHAN_MODE == 'modal': GUIDANCE_LAMBDA = 110
+    if CHAN_MODE == 'spatial': GUIDANCE_LAMBDA = 8e-3   #eta
+    elif CHAN_MODE == 'modal': 
+        if FREQ_GHZ == 12: GUIDANCE_LAMBDA = 9e-3
+        elif FREQ_GHZ == 38 and R_T == 54: GUIDANCE_LAMBDA = 8e-3
+        elif FREQ_GHZ == 38 and R_T == 64: GUIDANCE_LAMBDA = 7e-3
+            
 else: GUIDANCE_LAMBDA = 1.2
 # -----------------------------------
 if CHAN_MODE == 'spatial':
@@ -102,6 +107,56 @@ elif MODE == 'test':
     from models.epsnet_mlp import EpsNetMLP
     
     # print("\n[Info] Initializing Tracking Inference Stage...")
+
+    # def regularized_dc_update(y_obs, M, x_prior, sigma_n2, dc_reg=0.1):
+    #     """
+    #     Regularized data-consistency update.
+
+    #     Observation model:
+    #         y = x @ M.T
+
+    #     Solves:
+    #         min_x ||y - x M.T||^2 / sigma_n2 + lambda ||x - x_prior||^2
+
+    #     dc_reg:
+    #         smaller -> closer to LS
+    #         larger  -> closer to DDIM prior
+    #     """
+    #     D = M.shape[1]
+    #     device = M.device
+    #     dtype = M.dtype
+
+    #     sigma_eff = max(float(sigma_n2), 0.01)
+
+    #     I = torch.eye(D, dtype=dtype, device=device)
+
+    #     gram = M.conj().t() @ M / sigma_eff
+
+    #     gram_scale = torch.real(torch.trace(gram)) / D
+    #     lam = dc_reg * gram_scale
+
+    #     A = gram + lam * I
+
+    #     B = M.conj().t() @ y_obs.t() / sigma_eff + lam * x_prior.t()
+
+    #     x_dc = torch.linalg.solve(A, B).t()
+
+    #     return x_dc
+
+    # def nmse_db_complex(x_true, x_hat):
+    #     """
+    #     Compute NMSE in dB for complex-valued tensors.
+
+    #     x_true: ground-truth complex channel, shape [N, D]
+    #     x_hat : estimated complex channel, shape [N, D]
+
+    #     NMSE = E[||x_true - x_hat||^2] / E[||x_true||^2]
+    #     NMSE_dB = 10 log10(NMSE)
+    #     """
+    #     mse = torch.mean(torch.sum(torch.abs(x_true - x_hat) ** 2, dim=1))
+    #     ref = torch.mean(torch.sum(torch.abs(x_true) ** 2, dim=1))
+    #     nmse = mse / ref
+    #     return 10.0 * torch.log10(nmse).item()
     
     # 1. Load Trained Model
     weights_path = os.path.join(script_dir, "weights", MODEL_WEIGHT_FILE_NAME)
@@ -167,6 +222,26 @@ elif MODE == 'test':
             dynamic_eta=DYNAMIC_ETA, 
             device=device
         )
+
+        # sigma_n2 = sig_power * (10 ** (-snr / 10.0))
+
+        # if CHAN_MODE == "modal" and NUM_PILOTS == 320 and R_T == 64:
+        #     for dc_reg in [0.01, 0.03, 0.1, 0.3, 1.0]:
+        #         x_dc = regularized_dc_update(
+        #             y_obs=y_obs,
+        #             M=M_matrix,
+        #             x_prior=x0_est,
+        #             sigma_n2=sigma_n2,
+        #             dc_reg=dc_reg
+        #         )
+
+        #         dc_nmse = nmse_db_complex(x0_tau_plus_1, x_dc)
+
+        #         print(
+        #             f"[Post-DDIM DC] SNR={snr:3d} dB | "
+        #             f"dc_reg={dc_reg:.2e} | "
+        #             f"DC NMSE={dc_nmse:7.2f} dB"
+        #         )
         
         # 4. Calculate Tracking NMSE
         mse = torch.mean(torch.norm(x0_tau_plus_1 - x0_est, dim=1)**2)
@@ -190,10 +265,10 @@ elif MODE == 'test':
     
     # 5. Save Results
     if CHAN_MODE == 'spatial':
-        if DYNAMIC_ETA: res_filename = f"NMSE_DDIM_spatial_T{NUM_PILOTS}_{FREQ_GHZ}GHz_rho{RHO:.3f}.mat"
+        if DYNAMIC_ETA: res_filename = f"NMSE_DDIM_spatial_T{NUM_PILOTS}_{FREQ_GHZ}GHz_rho{RHO:.3f}_pg.mat"
         else: res_filename = f"NMSE_DDIM_spatial_T{NUM_PILOTS}_{FREQ_GHZ}GHz_rho{RHO:.3f}_fixed_eta.mat"
     elif CHAN_MODE == 'modal':
-        if DYNAMIC_ETA: res_filename = f"NMSE_DDIM_rT{R_T}_T{NUM_PILOTS}_{FREQ_GHZ}GHz_rho{RHO:.3f}.mat"
+        if DYNAMIC_ETA: res_filename = f"NMSE_DDIM_rT{R_T}_T{NUM_PILOTS}_{FREQ_GHZ}GHz_rho{RHO:.3f}_pg.mat"
         else: res_filename = f"NMSE_DDIM_rT{R_T}_T{NUM_PILOTS}_{FREQ_GHZ}GHz_rho{RHO:.3f}_fixed_eta.mat"
     res_path = os.path.join(script_dir, "test_results", "NMSE_raw_mats")
     os.makedirs(res_path, exist_ok=True)

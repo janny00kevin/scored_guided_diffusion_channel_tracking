@@ -70,16 +70,15 @@ def ddim_tracking_sampler(y_obs_complex, M_complex, x0_tau_complex, rho,
             grad_cplx = torch.matmul(err_cplx, M_complex.conj()) / max(sigma_n2, max_thred)
             
             # Map complex gradient back to normalized real space (Chain Rule)
-            grad_real = complex_to_real_concat(grad_cplx)
-            grad_norm = grad_real * data_std
-            
-            # Apply guidance
+            grad_x_real = complex_to_real_concat(grad_cplx)
+            x0_hat_real = x0_hat_norm * data_std + data_mean
+
             if dynamic_eta is True:
-                x0_hat_guided_norm = x0_hat_norm + guidance_lambda * sqrt_1m_a_cur * grad_norm
-            elif dynamic_eta is False:
-                x0_hat_guided_norm = x0_hat_norm + guidance_lambda * grad_norm
+                x0_guided_real = x0_hat_real + guidance_lambda * sqrt_1m_a_cur * grad_x_real
             else:
-                raise ValueError("Invalid value for dynamic_eta. Use True or False.")
+                x0_guided_real = x0_hat_real + guidance_lambda * grad_x_real
+
+            x0_hat_guided_norm = (x0_guided_real - data_mean) / data_std
             
             # Recalculate equivalent noise to step down properly
             eps_guided = (x_t - sqrt_a_cur * x0_hat_guided_norm) / (sqrt_1m_a_cur + 1e-12)
@@ -99,12 +98,16 @@ def ddim_tracking_sampler(y_obs_complex, M_complex, x0_tau_complex, rho,
         x0_hat_phys_cplx = real_to_complex_concat(x0_hat_phys_real)
         err_cplx = y_obs_complex - torch.matmul(x0_hat_phys_cplx, M_complex.t())
         grad_cplx = torch.matmul(err_cplx, M_complex.conj()) / max(sigma_n2, max_thred)
-        grad_norm = complex_to_real_concat(grad_cplx) * data_std
-        
+        grad_x_real = complex_to_real_concat(grad_cplx)
+
+        x0_hat_real = x0_hat_norm * data_std + data_mean
+
         if dynamic_eta is True:
-            x0_hat_final_guided_norm = x0_hat_final_norm + guidance_lambda * sqrt_1m_a_cur * grad_norm
-        elif dynamic_eta is False:
-            x0_hat_final_guided_norm = x0_hat_final_norm + guidance_lambda * grad_norm
+            x0_guided_real = x0_hat_real + guidance_lambda * sqrt_1m_a_cur * grad_x_real
+        else:
+            x0_guided_real = x0_hat_real + guidance_lambda * grad_x_real
+
+        x0_hat_final_guided_norm = (x0_guided_real - data_mean) / data_std
 
         # Output final physical complex state
         x0_final_phys_real = x0_hat_final_guided_norm * data_std + data_mean
