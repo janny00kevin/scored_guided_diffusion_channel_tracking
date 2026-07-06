@@ -11,7 +11,7 @@ FREQ_GHZ = 38
 if FREQ_GHZ == 12: RHO = 0.1034
 elif FREQ_GHZ == 38: RHO = 0.0001
 # NUM_PILOTS = 64
-R_T = 64
+R_T = 54
 mode = 'modal' # 'spatial' or 'modal'
 
 # Load .mat files to plot
@@ -153,6 +153,10 @@ def plot_and_save_metric(metric_type, title, ylabel, save_name_base, script_dir)
         # flatten arrays
         snrs = data[MAT_KEYS["snr"]].flatten()
         values = data[data_key].flatten()
+        # --- normalized by r_T ---
+        if mode == 'modal':
+            values = values - 10 * np.log10(R_T)
+        # -----------------------------------------------------------
         
         # plot
         data_found = True
