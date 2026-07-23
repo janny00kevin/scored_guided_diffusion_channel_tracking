@@ -14,11 +14,11 @@ TX_DIM = [8, 8]
 RX_DIM = [1, 1]
 if FREQ_GHZ == 12: RHO = 0.1034
 elif FREQ_GHZ == 38: RHO = 0.0001
-R_T = 64
+R_T = 54
 NUM_SAMPLES = 1000000
-CUDA = 1
+CUDA = 0
 CHAN_MODE = 'modal' # 'spatial' or 'modal'
-NUM_PILOTS = 64*5
+NUM_PILOTS = 64*4
 
 # Training settings
 NUM_EPOCHS = 10000

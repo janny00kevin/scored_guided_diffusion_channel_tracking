@@ -8,34 +8,37 @@ from matplotlib.patches import Ellipse
 # 1. Configuration
 # =============================
 FREQ_GHZ = 38
-if FREQ_GHZ == 12: RHO = 0.1034
-elif FREQ_GHZ == 38: RHO = 0.0001
-# NUM_PILOTS = 64
+if FREQ_GHZ == 12: 
+    RHO = 0.1034
+    T = [64, 128, 320]
+elif FREQ_GHZ == 38: 
+    RHO = 0.0001
+    T = [64, 128, 256]
 R_T = 54
 mode = 'modal' # 'spatial' or 'modal'
 
 # Load .mat files to plot
 if mode == 'spatial':
     FILES = {
-        f"Kalman Filter (T=64)": f"NMSE_KF_spatial_T64_{FREQ_GHZ}GHz_rho{RHO:.3f}.mat",
-        r"DDIM Tracker w/ varied $\eta_k$ (T=64)": f"NMSE_DDIM_spatial_T64_{FREQ_GHZ}GHz_rho{RHO:.3f}_pg.mat",
-        f"Kalman Filter (T=128)": f"NMSE_KF_spatial_T128_{FREQ_GHZ}GHz_rho{RHO:.3f}.mat",
-        r"DDIM Tracker w/ varied $\eta_k$ (T=128)": f"NMSE_DDIM_spatial_T128_{FREQ_GHZ}GHz_rho{RHO:.3f}_pg.mat",
-        f"Kalman Filter (T=320)": f"NMSE_KF_spatial_T320_{FREQ_GHZ}GHz_rho{RHO:.3f}.mat",
-        r"DDIM Tracker w/ varied $\eta_k$ (T=320)": f"NMSE_DDIM_spatial_T320_{FREQ_GHZ}GHz_rho{RHO:.3f}_pg.mat",
+        f"Kalman Filter (T={T[0]})": f"NMSE_KF_spatial_T{T[0]}_{FREQ_GHZ}GHz_rho{RHO:.3f}.mat",
+        fr"DDIM Tracker w/ varied $\eta_k$ (T={T[0]})": f"NMSE_DDIM_spatial_T{T[0]}_{FREQ_GHZ}GHz_rho{RHO:.3f}_pg.mat",
+        f"Kalman Filter (T={T[1]})": f"NMSE_KF_spatial_T{T[1]}_{FREQ_GHZ}GHz_rho{RHO:.3f}.mat",
+        fr"DDIM Tracker w/ varied $\eta_k$ (T={T[1]})": f"NMSE_DDIM_spatial_T{T[1]}_{FREQ_GHZ}GHz_rho{RHO:.3f}_pg.mat",
+        f"Kalman Filter (T={T[2]})": f"NMSE_KF_spatial_T{T[2]}_{FREQ_GHZ}GHz_rho{RHO:.3f}.mat",
+        fr"DDIM Tracker w/ varied $\eta_k$ (T={T[2]})": f"NMSE_DDIM_spatial_T{T[2]}_{FREQ_GHZ}GHz_rho{RHO:.3f}_pg.mat",
     }
 elif mode == 'modal':
     FILES = {
-        f"Kalman Filter (T=64)": f"NMSE_KF_rT{R_T}_T64_{FREQ_GHZ}GHz_rho{RHO:.3f}.mat",
-        r"DDIM Tracker w/ varied $\eta_k$ (T=64)": f"NMSE_DDIM_rT{R_T}_T64_{FREQ_GHZ}GHz_rho{RHO:.3f}_pg.mat",
-        f"Kalman Filter (T=128)": f"NMSE_KF_rT{R_T}_T128_{FREQ_GHZ}GHz_rho{RHO:.3f}.mat",
-        r"DDIM Tracker w/ varied $\eta_k$ (T=128)": f"NMSE_DDIM_rT{R_T}_T128_{FREQ_GHZ}GHz_rho{RHO:.3f}_pg.mat",
-        f"Kalman Filter (T=320)": f"NMSE_KF_rT{R_T}_T320_{FREQ_GHZ}GHz_rho{RHO:.3f}.mat", 
-        r"DDIM Tracker w/ varied $\eta_k$ (T=320)": f"NMSE_DDIM_rT{R_T}_T320_{FREQ_GHZ}GHz_rho{RHO:.3f}_pg.mat",
+        f"Kalman Filter (T={T[0]})": f"NMSE_KF_rT{R_T}_T{T[0]}_{FREQ_GHZ}GHz_rho{RHO:.3f}.mat",
+        fr"DDIM Tracker w/ varied $\eta_k$ (T={T[0]})": f"NMSE_DDIM_rT{R_T}_T{T[0]}_{FREQ_GHZ}GHz_rho{RHO:.3f}_pg.mat",
+        f"Kalman Filter (T={T[1]})": f"NMSE_KF_rT{R_T}_T{T[1]}_{FREQ_GHZ}GHz_rho{RHO:.3f}.mat",
+        fr"DDIM Tracker w/ varied $\eta_k$ (T={T[1]})": f"NMSE_DDIM_rT{R_T}_T{T[1]}_{FREQ_GHZ}GHz_rho{RHO:.3f}_pg.mat",
+        f"Kalman Filter (T={T[2]})": f"NMSE_KF_rT{R_T}_T{T[2]}_{FREQ_GHZ}GHz_rho{RHO:.3f}.mat", 
+        fr"DDIM Tracker w/ varied $\eta_k$ (T={T[2]})": f"NMSE_DDIM_rT{R_T}_T{T[2]}_{FREQ_GHZ}GHz_rho{RHO:.3f}_pg.mat",
     }
 
 STYLES = {
-    "Kalman Filter (T=64)": {
+    f"Kalman Filter (T={T[0]})": {
         'color': 'blue', 
         'marker': 's', 
         'linestyle': '-', 
@@ -49,14 +52,14 @@ STYLES = {
     #     'linewidth': 2, 
     #     'markersize': 8
     # },
-    r"DDIM Tracker w/ varied $\eta_k$ (T=64)": {
+    fr"DDIM Tracker w/ varied $\eta_k$ (T={T[0]})": {
         'color': 'green', 
         'marker': 'D', 
         'linestyle': '-',  
         'linewidth': 2, 
         'markersize': 8
     },
-    "Kalman Filter (T=128)": {
+    f"Kalman Filter (T={T[1]})": {
         'color': 'blue', 
         'marker': 's', 
         'linestyle': '--', 
@@ -70,14 +73,14 @@ STYLES = {
     #     'linewidth': 2, 
     #     'markersize': 8
     # },
-    r"DDIM Tracker w/ varied $\eta_k$ (T=128)": {
+    fr"DDIM Tracker w/ varied $\eta_k$ (T={T[1]})": {
         'color': 'green', 
         'marker': 'D', 
         'linestyle': '--',  
         'linewidth': 2, 
         'markersize': 8
     },
-    "Kalman Filter (T=320)": {
+    f"Kalman Filter (T={T[2]})": {
         'color': 'blue', 
         'marker': 's', 
         'linestyle': ':', 
@@ -91,7 +94,7 @@ STYLES = {
     #     'linewidth': 2, 
     #     'markersize': 8
     # },
-    r"DDIM Tracker w/ varied $\eta_k$ (T=320)": {
+    fr"DDIM Tracker w/ varied $\eta_k$ (T={T[2]})": {
         'color': 'green', 
         'marker': 'D', 
         'linestyle': ':',  
@@ -132,7 +135,7 @@ def plot_and_save_metric(metric_type, title, ylabel, save_name_base, script_dir)
     
     # Store end points to draw ellipses around them later
     # Format: { 'T_value': [ (x1, y1), (x2, y2) ] }
-    group_points = {'64': [], '128': [], '320': []}
+    group_points = {f"{T[0]}": [], f"{T[1]}": [], f"{T[2]}": []}
     target_snr = 10  # The SNR value where we will draw the circle/ellipse
     
     # get corresponding data key
@@ -165,19 +168,19 @@ def plot_and_save_metric(metric_type, title, ylabel, save_name_base, script_dir)
         ax.plot(snrs, values, label=legend_label, **style)
 
         # ---------------------------------------------------------
-        # NEW: Find the y-value at our target SNR for grouping
+        # Find the y-value at our target SNR for grouping
         # ---------------------------------------------------------
         try:
             idx = np.where(snrs == target_snr)[0][0]
             y_val = values[idx]
             
             # Determine which T group this belongs to based on the label
-            if "T=64" in label:
-                group_points['64'].append(y_val)
-            elif "T=128" in label:
-                group_points['128'].append(y_val)
-            elif "T=320" in label:
-                group_points['320'].append(y_val)
+            if f"T={T[0]}" in label:
+                group_points[f"{T[0]}"].append(y_val)
+            elif f"T={T[1]}" in label:
+                group_points[f"{T[1]}"].append(y_val)
+            elif f"T={T[2]}" in label:
+                group_points[f"{T[2]}"].append(y_val)
         except IndexError:
             pass # target_snr not found in this array
 
@@ -198,7 +201,7 @@ def plot_and_save_metric(metric_type, title, ylabel, save_name_base, script_dir)
     # NEW: Draw Ellipses and Add Text Labels
     # ---------------------------------------------------------
     # Define colors for the groups
-    group_colors = {'64': 'red', '128': 'red', '320': 'red'}
+    group_colors = {f"{T[0]}": 'red', f"{T[1]}": 'red', f"{T[2]}": 'red'}
     
     for t_val, y_vals in group_points.items():
         if len(y_vals) >= 2: # We need both KF and DDIM to draw a circle around them
@@ -259,9 +262,9 @@ def main():
     print("[Info] Generating tracking plots...")
 
     if mode == 'spatial':
-        save_name_base = f"NMSE_Tracker_{FREQ_GHZ}GHz_spatial_rho{RHO:.3f}_T64vs128vs320_pg"
+        save_name_base = f"NMSE_Tracker_{FREQ_GHZ}GHz_spatial_rho{RHO:.3f}_T{T[0]}vs{T[1]}vs{T[2]}_pg"
     elif mode == 'modal':
-        save_name_base = f"NMSE_Tracker_{FREQ_GHZ}GHz_rT{R_T}_rho{RHO:.3f}_T64vs128vs320_pg"
+        save_name_base = f"NMSE_Tracker_{FREQ_GHZ}GHz_rT{R_T}_rho{RHO:.3f}_T{T[0]}vs{T[1]}vs{T[2]}_pg"
 
     # Plot Tracking NMSE (x0 state)
     plot_and_save_metric(

@@ -12,7 +12,7 @@ FREQ_GHZ = 38
 if FREQ_GHZ == 12: RHO = 0.1034
 elif FREQ_GHZ == 38: RHO = 0.0001
 R_T = 54
-NUM_PILOTS = 64*5
+NUM_PILOTS = 64*4
 MODE = 'modal' # 'spatial' or 'modal'
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
