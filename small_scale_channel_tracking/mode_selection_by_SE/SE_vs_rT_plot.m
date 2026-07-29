@@ -1,85 +1,265 @@
-clc; clear; close all;
+%% SE_vs_rT_plot.m
+% Recreate the Python SE-versus-r_T plots as editable MATLAB .fig files.
+% For every SNR, this script creates:
+%   1. An IEEE-sized spectral-efficiency curve figure.
+%   2. An editable efficiency-table figure.
+%
+% The .fig files use the same basenames as the Python PNG files and are
+% saved in SE_vs_rT_result.
 
-%% --- 1. Path Setup ---
-% Get the directory where this script is saved
-script_dir = fileparts(mfilename('fullpath'));
-result_dir = fullfile(script_dir, 'SE_vs_rT_result');
+clear;
+clc;
 
-freq_ghz = 12;
-mat_filename = sprintf('SE_vs_rT_%dGHz_data.mat', freq_ghz);
-mat_filepath = fullfile(result_dir, mat_filename);
+%% 1. Path setup
+scriptDir = fileparts(mfilename('fullpath'));
+resultDir = fullfile(scriptDir, 'SE_vs_rT_result');
 
-if ~exist(mat_filepath, 'file')
-    error('Error: Could not find the data file at:\n%s\nRun your Python simulation first.', mat_filepath);
+FREQ_GHZ = 12;
+matFilename = sprintf('SE_vs_rT_%dGHz_data.mat', FREQ_GHZ);
+matFilepath = fullfile(resultDir, matFilename);
+
+if ~isfile(matFilepath)
+    error('Could not find the data file at:\n%s', matFilepath);
 end
 
-%% --- 2. Load Data ---
-fprintf('Loading data from %s...\n', mat_filename);
-data = load(mat_filepath);
+%% 2. Load data
+fprintf('Loading data from %s...\n', matFilename);
+data = load(matFilepath);
 
-% Extract core vectors
-snr_list = data.SNR_LIST;
-rt_range = data.RT_RANGE;
+if ~isfield(data, 'SNR_LIST') || ~isfield(data, 'RT_RANGE')
+    error('The MAT file must contain SNR_LIST and RT_RANGE.');
+end
 
-%% --- 3. Plotting Loop for Each SNR ---
-for idx = 1:length(snr_list)
-    snr = snr_list(idx);
-    fprintf('\nGenerating editable figure for SNR = %d dB...\n', snr);
-    
-    % Reconstruct the dynamic naming string used by Python (e.g., 'n4', 'p0', 'p4')
+SNR_LIST = data.SNR_LIST(:).';
+RT_RANGE = data.RT_RANGE(:);
+
+%% 3. Generate a curve and an efficiency table for every SNR
+for snr = SNR_LIST
+    fprintf('\nGenerating figures for SNR = %g dB...\n', snr);
+
     if snr < 0
-        snr_str = sprintf('n%d', abs(snr));
+        snrStr = sprintf('n%g', abs(snr));
     else
-        snr_str = sprintf('p%d', snr);
+        snrStr = sprintf('p%g', snr);
     end
-    
-    % Dynamically fetch the variables from the loaded structure
-    baseline = data.(sprintf('baseline_snr_%s', snr_str));
-    res_ideal = data.(sprintf('ideal_snr_%s', snr_str));
-    res_hybrid = data.(sprintf('hybrid_snr_%s', snr_str));
-    
-    %% --- 4. Generate the Figure (IEEE Clean Style by default) ---
-    % Create a clean, standard aspect-ratio figure canvas
-    h_fig = figure('Units', 'inches', 'Position', [2, 2, 5, 3.8]);
-    hold on;
-    
-    % Plot curves with clean styling (thicker lines for easy viewing)
-    plot(rt_range, res_ideal, 'b-', 'LineWidth', 1.8, 'DisplayName', 'Modal Fully Digital');
-    plot(rt_range, res_hybrid, 'g--o', 'LineWidth', 1.5, 'MarkerSize', 4, 'MarkerFaceColor', 'g', 'DisplayName', 'Modal Hybrid w/ E');
-    
-    % Plot the Port full-digital ceiling limit
-    yline(baseline, 'k:', 'LineWidth', 1.8, 'DisplayName', 'Port Bound');
-    
-    %% --- 5. Figure Details and Labeling ---
-    xlabel('Number of Modes (r_T)', 'FontSize', 11, 'FontName', 'Helvetica');
-    ylabel('Spectral Efficiency (bps/Hz)', 'FontSize', 11, 'FontName', 'Helvetica');
-    title(sprintf('SE Analysis (SNR = %d dB, %d GHz Imperfect CSI)', snr, freq_ghz), 'FontSize', 11, 'FontWeight', 'bold');
-    
-    grid on;
-    set(gca, 'GridLineStyle', ':', 'GridAlpha', 0.6);
-    set(gca, 'FontSize', 10, 'FontName', 'Helvetica'); % Axis tick font sizes
-    
-    % Add clean legend without a bulky border box
-    legend('Location', 'southeast', 'FontSize', 9, 'Box', 'off');
-    
-    hold off;
-    
-    %% --- 6. Save Simultaneously as Editable .fig and Publication-Quality .png ---
-    % 1. Save the editable MATLAB layout file
-    save_filename_fig = sprintf('SE_vs_rT_SNR_%sdB.fig', snr_str);
-    save_filepath_fig = fullfile(result_dir, save_filename_fig);
-    saveas(h_fig, save_filepath_fig);
-    
-    % 2. Save the raster image file (300 DPI minimum for IEEE print layout)
-    save_filename_png = sprintf('SE_vs_rT_SNR_%sdB.png', snr_str);
-    save_filepath_png = fullfile(result_dir, save_filename_png);
-    exportgraphics(h_fig, save_filepath_png, 'Resolution', 300);
-    
-    % Close the active canvas to clear memory
-    close(h_fig); 
-    
-    fprintf('Saved editable fig: %s\n', save_filename_fig);
-    fprintf('Saved viewing png:  %s\n', save_filename_png);
+
+    baselineField = sprintf('baseline_snr_%s', snrStr);
+    idealField = sprintf('ideal_snr_%s', snrStr);
+    hybridField = sprintf('hybrid_snr_%s', snrStr);
+
+    requiredFields = {baselineField, idealField, hybridField};
+    for fieldIndex = 1:numel(requiredFields)
+        if ~isfield(data, requiredFields{fieldIndex})
+            error('Required variable "%s" is missing from %s.', ...
+                requiredFields{fieldIndex}, matFilename);
+        end
+    end
+
+    baselineValues = data.(baselineField);
+    baseline = baselineValues(1);
+    resIdeal = data.(idealField);
+    resIdeal = resIdeal(:);
+    resHybridE = data.(hybridField);
+    resHybridE = resHybridE(:);
+
+    if numel(resIdeal) ~= numel(RT_RANGE) || ...
+            numel(resHybridE) ~= numel(RT_RANGE)
+        error(['RT_RANGE, %s, and %s must contain the same ', ...
+               'number of elements.'], idealField, hybridField);
+    end
+
+    %% 3A. IEEE-sized line plot
+    curveFig = figure( ...
+        'Color', 'white', ...
+        'Units', 'inches', ...
+        'Position', [1, 1, 3.5, 2.6], ...
+        'PaperPositionMode', 'auto');
+
+    curveAx = axes(curveFig);
+    hold(curveAx, 'on');
+
+    idealHandle = plot(curveAx, RT_RANGE, resIdeal, ...
+        'Color', [0, 0, 1], ...
+        'LineStyle', '-', ...
+        'LineWidth', 1.2, ...
+        'DisplayName', 'Modal Fully Digital');
+
+    hybridHandle = plot(curveAx, RT_RANGE, resHybridE, ...
+        'Color', [0, 0.501960784313725, 0], ...
+        'LineStyle', '--', ...
+        'LineWidth', 1.2, ...
+        'Marker', 'o', ...
+        'MarkerSize', 3, ...
+        'MarkerFaceColor', [0, 0.501960784313725, 0], ...
+        'MarkerEdgeColor', [0, 0.501960784313725, 0], ...
+        'DisplayName', 'Modal Hybrid w/ E');
+
+    baselineHandle = yline(curveAx, baseline, ':', ...
+        'Color', [0, 0, 0], ...
+        'LineWidth', 1.5, ...
+        'DisplayName', 'Port Bound');
+
+    xlabel(curveAx, 'Number of Modes (r_T)', ...
+        'FontName', 'Helvetica', ...
+        'FontSize', 9, ...
+        'Interpreter', 'tex');
+
+    ylabel(curveAx, 'Spectral Efficiency (bps/Hz)', ...
+        'FontName', 'Helvetica', ...
+        'FontSize', 9, ...
+        'Interpreter', 'none');
+
+    set(curveAx, ...
+        'FontName', 'Helvetica', ...
+        'FontSize', 8, ...
+        'Box', 'on', ...
+        'GridLineStyle', ':', ...
+        'GridAlpha', 0.6, ...
+        'Layer', 'bottom');
+    grid(curveAx, 'on');
+
+    legend(curveAx, ...
+        [idealHandle, hybridHandle, baselineHandle], ...
+        {'Modal Fully Digital', 'Modal Hybrid w/ E', 'Port Bound'}, ...
+        'Location', 'southeast', ...
+        'FontName', 'Helvetica', ...
+        'FontSize', 7, ...
+        'Interpreter', 'none', ...
+        'Box', 'off');
+
+    % Matplotlib adds approximately a 5% horizontal data margin.
+    rtMin = min(RT_RANGE);
+    rtMax = max(RT_RANGE);
+    rtSpan = rtMax - rtMin;
+    if rtSpan > 0
+        xlim(curveAx, [rtMin - 0.05*rtSpan, rtMax + 0.05*rtSpan]);
+    end
+
+    hold(curveAx, 'off');
+    drawnow;
+
+    % Approximate Matplotlib's bbox_inches='tight' inside the saved figure.
+    set(curveAx, 'LooseInset', ...
+        max(get(curveAx, 'TightInset'), [0.02, 0.02, 0.02, 0.02]));
+
+    curveBaseName = sprintf( ...
+        'SE_vs_rT_curve_%dGHz_SNR_%sdB', FREQ_GHZ, snrStr);
+    curveFigPath = fullfile(resultDir, [curveBaseName, '.fig']);
+    savefig(curveFig, curveFigPath);
+    close(curveFig);
+
+    fprintf('[Success] Saved editable curve:\n%s\n', curveFigPath);
+
+    %% 3B. Editable efficiency table
+    numberOfRows = numel(RT_RANGE);
+    tableData = cell(numberOfRows, 3);
+
+    for rowIndex = 1:numberOfRows
+        valIdeal = resIdeal(rowIndex);
+        valHybrid = resHybridE(rowIndex);
+
+        efficiencyIdeal = (valIdeal / baseline)*100;
+        efficiencyHybrid = (valHybrid / baseline)*100;
+
+        tableData{rowIndex, 1} = sprintf('r_T = %g', RT_RANGE(rowIndex));
+        tableData{rowIndex, 2} = sprintf( ...
+            '%.2f (%.1f%%)', valIdeal, efficiencyIdeal);
+        tableData{rowIndex, 3} = sprintf( ...
+            '%.2f (%.1f%%)', valHybrid, efficiencyHybrid);
+    end
+
+    columnLabels = {'Mode Config', 'Ideal Mode', 'Hybrid w/ E'};
+    columnColors = [ ...
+        242, 242, 242; ...
+        217, 234, 211; ...
+        207, 226, 243] / 255;
+
+    tableFig = figure( ...
+        'Color', 'white', ...
+        'Units', 'inches', ...
+        'Position', [1, 1, 6, 12], ...
+        'PaperPositionMode', 'auto');
+
+    titleText = sprintf([ ...
+        'Efficiency Analysis (SNR=%gdB, %dGHz Imperfect CSI)\n', ...
+        'Baseline: Port Domain Bound'], snr, FREQ_GHZ);
+
+    annotation(tableFig, 'textbox', [0.04, 0.92, 0.92, 0.065], ...
+        'String', titleText, ...
+        'HorizontalAlignment', 'center', ...
+        'VerticalAlignment', 'middle', ...
+        'FontName', 'Helvetica', ...
+        'FontSize', 12, ...
+        'FontWeight', 'bold', ...
+        'Interpreter', 'none', ...
+        'EdgeColor', 'none');
+
+    % Python uses a 0.025 body-row height and a 0.035 header height.
+    tableHeight = min(0.86, 0.025*numberOfRows + 0.035);
+    tableBottom = 0.47 - tableHeight/2;
+    tableBottom = max(0.035, tableBottom);
+
+    tableAx = axes(tableFig, ...
+        'Units', 'normalized', ...
+        'Position', [0.055, tableBottom, 0.89, tableHeight], ...
+        'Visible', 'off', ...
+        'XLim', [0, 3], ...
+        'YLim', [0, numberOfRows + 1.4]);
+    hold(tableAx, 'on');
+
+    edgeColor = [0.35, 0.35, 0.35];
+
+    % Colored header row; its height is 1.4 times a body row.
+    for columnIndex = 1:3
+        rectangle(tableAx, ...
+            'Position', [columnIndex - 1, numberOfRows, 1, 1.4], ...
+            'FaceColor', columnColors(columnIndex, :), ...
+            'EdgeColor', edgeColor, ...
+            'LineWidth', 0.5);
+
+        text(tableAx, columnIndex - 0.5, numberOfRows + 0.7, ...
+            columnLabels{columnIndex}, ...
+            'HorizontalAlignment', 'center', ...
+            'VerticalAlignment', 'middle', ...
+            'FontName', 'Helvetica', ...
+            'FontSize', 10, ...
+            'FontWeight', 'bold', ...
+            'Interpreter', 'none');
+    end
+
+    % White body cells. Every rectangle and text label remains editable.
+    for rowIndex = 1:numberOfRows
+        yPosition = numberOfRows - rowIndex;
+
+        for columnIndex = 1:3
+            rectangle(tableAx, ...
+                'Position', [columnIndex - 1, yPosition, 1, 1], ...
+                'FaceColor', 'white', ...
+                'EdgeColor', edgeColor, ...
+                'LineWidth', 0.5);
+
+            text(tableAx, columnIndex - 0.5, yPosition + 0.5, ...
+                tableData{rowIndex, columnIndex}, ...
+                'HorizontalAlignment', 'center', ...
+                'VerticalAlignment', 'middle', ...
+                'FontName', 'Helvetica', ...
+                'FontSize', 10, ...
+                'Interpreter', 'none');
+        end
+    end
+
+    axis(tableAx, 'off');
+    hold(tableAx, 'off');
+    drawnow;
+
+    tableBaseName = sprintf( ...
+        'SE_vs_rT_Table_%dGHz_SNR_%sdB', FREQ_GHZ, snrStr);
+    tableFigPath = fullfile(resultDir, [tableBaseName, '.fig']);
+    % savefig(tableFig, tableFigPath);
+    close(tableFig);
+
+    fprintf('[Success] Saved editable table:\n%s\n', tableFigPath);
 end
 
-fprintf('\nSuccess! All figures are safely saved and fully editable inside MATLAB.\n');
+fprintf('\nSuccess! All editable figures have been saved to:\n%s\n', ...
+    resultDir);
