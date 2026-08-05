@@ -17,6 +17,7 @@ training_testing_dataset/
 
 *.mat
 tmp.py
+tmp.txt
 tmp.m
 logs
 .vscode/
