@@ -12,7 +12,7 @@ num_samples = 1000000;
 
 % General setting for channel generation
 loc_BSs = [0; 0; 20000];
-loc_UTs = [0; 0; 0];     % set distance between BSs and UT to be around 680 m in 2D [min 35 m in 2D]
+loc_UTs = [0; 0; 1.5];     % set distance between BSs and UT to be around 680 m in 2D [min 35 m in 2D]
 ori_BSs = [1 0 0; 0 1 0; 0 0 -1];
 ori_UTs = [1 0 0; 0 1 0; 0 0 1];
 f_arr = [2 0]; % UPA n single antenna

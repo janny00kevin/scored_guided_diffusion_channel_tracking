@@ -63,7 +63,7 @@ def train_latent_epsnet_tracker(Xs_real, model_type='mlp', num_epochs=100, batch
 
     # --- 3. Model Setup ---
     if model_type == 'mlp':
-        from models.epsnet_mlp import LatentEpsNet as Net
+        from models.epsnet_mlp import EpsNetMLP as Net
         # 512 hidden size is generally plenty for a small dimension like 10
         net = Net(dim=dim, hidden=512, time_emb_dim=128).to(device)
     else:

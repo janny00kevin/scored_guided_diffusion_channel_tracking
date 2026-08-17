@@ -5,7 +5,7 @@ import numpy as np
 # -----------------------------
 # Configurations
 # -----------------------------
-RUN_ID = 2
+RUN_ID = 1
 MODE = {1: 'train', 2: 'test'}.get(RUN_ID, 'train')
 
 # Scenario Configs

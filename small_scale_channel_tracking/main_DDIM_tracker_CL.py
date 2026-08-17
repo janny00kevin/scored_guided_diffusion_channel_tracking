@@ -14,11 +14,11 @@ TX_DIM = [8, 8]
 RX_DIM = [1, 1]
 if FREQ_GHZ == 12: RHO = 0.1034
 elif FREQ_GHZ == 38: RHO = 0.0001
-R_T = 64
+R_T = 54
 NUM_SAMPLES = 1000000
-CUDA = 1
+CUDA = 0
 CHAN_MODE = 'modal' # 'spatial' or 'modal'
-NUM_PILOTS = 64*4
+NUM_PILOTS = 64*1
 
 # Training settings
 NUM_EPOCHS = 10000
@@ -108,7 +108,7 @@ elif MODE == 'test':
     import scipy.io as sio
     from data.data_loader_tracker import get_tracking_testing_dataset
     from diffusion.ddim_sampler_tracker import ddim_tracking_sampler
-    from models.epsnet_mlp import LatentEpsNet
+    from models.epsnet_mlp import EpsNetMLP
     
     # 1. Load Trained Model
     weights_path = os.path.join(script_dir, "weights", MODEL_WEIGHT_FILE_NAME)
@@ -121,7 +121,7 @@ elif MODE == 'test':
         dim = 64 * 2
     elif CHAN_MODE == 'modal':
         dim = R_T * 2
-    eps_net = LatentEpsNet(dim=dim, hidden=512, time_emb_dim=128).to(device)
+    eps_net = EpsNetMLP(dim=dim, hidden=512, time_emb_dim=128).to(device)
     eps_net.load_state_dict(checkpoint['model_state_dict'])
     eps_net.eval()
     
