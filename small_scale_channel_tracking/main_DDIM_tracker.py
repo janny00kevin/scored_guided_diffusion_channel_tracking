@@ -5,17 +5,20 @@ import numpy as np
 # -----------------------------
 # Configurations
 # -----------------------------
-RUN_ID = 2
+RUN_ID = 1
 MODE = {1: 'train', 2: 'test'}.get(RUN_ID, 'train')
 
 # Scenario Configs
-FREQ_GHZ = 12
+FREQ_GHZ = 38
 TX_DIM = [8, 8]
 RX_DIM = [1, 1]
-RHO = 0.1034
-R_T = 64
+if FREQ_GHZ == 12: RHO = 0.1034
+elif FREQ_GHZ == 38: RHO = 0.0001
+R_T = 54
 NUM_SAMPLES = 1000000
 CUDA = 0
+CHAN_MODE = 'modal' # 'spatial' or 'modal'
+NUM_PILOTS = 64*4
 
 # Training settings
 NUM_EPOCHS = 10000
@@ -23,7 +26,7 @@ TRAIN_BATCH_SIZE = 4096
 LR = 1e-3
 MODEL_TYPE = 'mlp'
 VAL_SPLIT = 0.1
-PATIENCE = 1
+PATIENCE = 10
 
 # Diffusion Process Settings
 BETA_MIN = 1e-4
@@ -34,14 +37,21 @@ T_DIFFUSION = 1000.0
 # --- Tunable Tracking Parameters ---
 NUM_TEST_SAMPLES = 3000
 NUM_SAMPLING_STEPS = 1000
-# K_START defines how much noise to add to the KF prediction. 
-# For rho=0.995 (very accurate prediction), a small value (15) is perfect. 
-# If tracking faster users (e.g. rho=0.8), you would increase this.
-K_START = 50
-GUIDANCE_LAMBDA = 50
+K_START = 30
+DYNAMIC_ETA = True
+if DYNAMIC_ETA: 
+    if CHAN_MODE == 'spatial': GUIDANCE_LAMBDA = 8e-3   #eta
+    elif CHAN_MODE == 'modal': 
+        if FREQ_GHZ == 12: GUIDANCE_LAMBDA = 9e-3
+        elif FREQ_GHZ == 38 and R_T == 54: GUIDANCE_LAMBDA = 8e-3
+        elif FREQ_GHZ == 38 and R_T == 64: GUIDANCE_LAMBDA = 7e-3
+            
+else: GUIDANCE_LAMBDA = 1.2
 # -----------------------------------
-
-MODEL_WEIGHT_FILE_NAME = f"Tracker_DDIM_{FREQ_GHZ}GHz_rT{R_T}_{MODEL_TYPE}_lr{LR:.0e}.pth"
+if CHAN_MODE == 'spatial':
+    MODEL_WEIGHT_FILE_NAME = f"Tracker_DDIM_{FREQ_GHZ}GHz_spatial_{MODEL_TYPE}_lr{LR:.0e}.pth"
+elif CHAN_MODE == 'modal':
+    MODEL_WEIGHT_FILE_NAME = f"Tracker_DDIM_{FREQ_GHZ}GHz_rT{R_T}_{MODEL_TYPE}_lr{LR:.0e}.pth"
 
 # -----------------------------
 # Setup
@@ -57,8 +67,12 @@ if MODE == 'train':
     from train_tracker import train_latent_epsnet_tracker
 
     # Construct the path to the npy file generated earlier
-    DATASET_PATH = os.path.join(script_dir, "data", "training_testing_dataset", 
-                                f"x0_{FREQ_GHZ}GHz_{TX_DIM[0]}x{TX_DIM[1]}Tx_{RX_DIM[0]}x{RX_DIM[1]}Rx_{NUM_SAMPLES}samples_rT{R_T}.pt")
+    if CHAN_MODE == 'spatial':
+        DATASET_PATH =  os.path.join(script_dir, "data", "training_testing_dataset", 
+                                     f"x0_{int(FREQ_GHZ)}GHz_{TX_DIM[0]}x{TX_DIM[1]}Tx_{RX_DIM[0]}x{RX_DIM[1]}Rx_{NUM_SAMPLES}samples_spatial.pt")
+    elif CHAN_MODE == 'modal':
+        DATASET_PATH = os.path.join(script_dir, "data", "training_testing_dataset", 
+                                    f"x0_{int(FREQ_GHZ)}GHz_{TX_DIM[0]}x{TX_DIM[1]}Tx_{RX_DIM[0]}x{RX_DIM[1]}Rx_{NUM_SAMPLES}samples_rT{R_T}.pt")
 
     print(f'[Info] Loading dataset from:\n  {DATASET_PATH}')
     x0_complex = torch.load(DATASET_PATH) # Expected shape: (1000000, 64)
@@ -93,6 +107,56 @@ elif MODE == 'test':
     from models.epsnet_mlp import EpsNetMLP
     
     # print("\n[Info] Initializing Tracking Inference Stage...")
+
+    # def regularized_dc_update(y_obs, M, x_prior, sigma_n2, dc_reg=0.1):
+    #     """
+    #     Regularized data-consistency update.
+
+    #     Observation model:
+    #         y = x @ M.T
+
+    #     Solves:
+    #         min_x ||y - x M.T||^2 / sigma_n2 + lambda ||x - x_prior||^2
+
+    #     dc_reg:
+    #         smaller -> closer to LS
+    #         larger  -> closer to DDIM prior
+    #     """
+    #     D = M.shape[1]
+    #     device = M.device
+    #     dtype = M.dtype
+
+    #     sigma_eff = max(float(sigma_n2), 0.01)
+
+    #     I = torch.eye(D, dtype=dtype, device=device)
+
+    #     gram = M.conj().t() @ M / sigma_eff
+
+    #     gram_scale = torch.real(torch.trace(gram)) / D
+    #     lam = dc_reg * gram_scale
+
+    #     A = gram + lam * I
+
+    #     B = M.conj().t() @ y_obs.t() / sigma_eff + lam * x_prior.t()
+
+    #     x_dc = torch.linalg.solve(A, B).t()
+
+    #     return x_dc
+
+    # def nmse_db_complex(x_true, x_hat):
+    #     """
+    #     Compute NMSE in dB for complex-valued tensors.
+
+    #     x_true: ground-truth complex channel, shape [N, D]
+    #     x_hat : estimated complex channel, shape [N, D]
+
+    #     NMSE = E[||x_true - x_hat||^2] / E[||x_true||^2]
+    #     NMSE_dB = 10 log10(NMSE)
+    #     """
+    #     mse = torch.mean(torch.sum(torch.abs(x_true - x_hat) ** 2, dim=1))
+    #     ref = torch.mean(torch.sum(torch.abs(x_true) ** 2, dim=1))
+    #     nmse = mse / ref
+    #     return 10.0 * torch.log10(nmse).item()
     
     # 1. Load Trained Model
     weights_path = os.path.join(script_dir, "weights", MODEL_WEIGHT_FILE_NAME)
@@ -101,17 +165,22 @@ elif MODE == 'test':
         
     checkpoint = torch.load(weights_path, map_location=device)
     
-    dim = R_T * 2
+    if CHAN_MODE == 'spatial':
+        dim = 64 * 2
+    elif CHAN_MODE == 'modal':
+        dim = R_T * 2
     eps_net = EpsNetMLP(dim=dim, hidden=512, time_emb_dim=128).to(device)
     eps_net.load_state_dict(checkpoint['model_state_dict'])
     eps_net.eval()
     
-    data_mean = checkpoint['data_mean'].to(device)
+    data_mean = checkpoint['data_mean'].to(device)        ##################
     data_std = checkpoint['data_std'].to(device)
+    # data_mean = torch.zeros_like(checkpoint['data_mean']).to(device)
+    # data_std = torch.ones_like(checkpoint['data_std']).to(device)
     
     # 2. Load Testing Data
     # Ensure NUM_TEST_SAMPLES = 3000 at the top of your file
-    dataset = get_tracking_testing_dataset(script_dir, NUM_TEST_SAMPLES, RHO, FREQ_GHZ)
+    dataset = get_tracking_testing_dataset(script_dir, NUM_TEST_SAMPLES, RHO, FREQ_GHZ, R_T, NUM_PILOTS, CHAN_MODE)
     config = dataset["config"]
     rho = config["rho"]
     
@@ -123,6 +192,7 @@ elif MODE == 'test':
     # Calculate base signal power (needed for SNR conversions inside sampler)
     y_clean = torch.matmul(x0_tau_plus_1, M_matrix.t())
     sig_power = torch.mean(torch.abs(y_clean)**2).item()
+    physical_mean_complex = torch.mean(x0_tau, dim=0)
     
     
     nmse_results = []
@@ -139,6 +209,7 @@ elif MODE == 'test':
             rho=rho,
             eps_net=eps_net, 
             data_mean=data_mean, 
+            physical_mean_complex = physical_mean_complex, 
             data_std=data_std, 
             snr_db=snr, 
             sig_power=sig_power,
@@ -147,9 +218,30 @@ elif MODE == 'test':
             T_DIFFUSION=T_DIFFUSION,
             beta_min=BETA_MIN, 
             beta_max=BETA_MAX, 
-            guidance_lambda=GUIDANCE_LAMBDA, 
+            guidance_lambda=GUIDANCE_LAMBDA,
+            dynamic_eta=DYNAMIC_ETA, 
             device=device
         )
+
+        # sigma_n2 = sig_power * (10 ** (-snr / 10.0))
+
+        # if CHAN_MODE == "modal" and NUM_PILOTS == 320 and R_T == 64:
+        #     for dc_reg in [0.01, 0.03, 0.1, 0.3, 1.0]:
+        #         x_dc = regularized_dc_update(
+        #             y_obs=y_obs,
+        #             M=M_matrix,
+        #             x_prior=x0_est,
+        #             sigma_n2=sigma_n2,
+        #             dc_reg=dc_reg
+        #         )
+
+        #         dc_nmse = nmse_db_complex(x0_tau_plus_1, x_dc)
+
+        #         print(
+        #             f"[Post-DDIM DC] SNR={snr:3d} dB | "
+        #             f"dc_reg={dc_reg:.2e} | "
+        #             f"DC NMSE={dc_nmse:7.2f} dB"
+        #         )
         
         # 4. Calculate Tracking NMSE
         mse = torch.mean(torch.norm(x0_tau_plus_1 - x0_est, dim=1)**2)
@@ -172,7 +264,12 @@ elif MODE == 'test':
     print("="*60)
     
     # 5. Save Results
-    res_filename = f"NMSE_Tracker_DDIM_{FREQ_GHZ}GHz_rho{RHO:.3f}.mat"
+    if CHAN_MODE == 'spatial':
+        if DYNAMIC_ETA: res_filename = f"NMSE_DDIM_spatial_T{NUM_PILOTS}_{FREQ_GHZ}GHz_rho{RHO:.3f}_pg.mat"
+        else: res_filename = f"NMSE_DDIM_spatial_T{NUM_PILOTS}_{FREQ_GHZ}GHz_rho{RHO:.3f}_fixed_eta.mat"
+    elif CHAN_MODE == 'modal':
+        if DYNAMIC_ETA: res_filename = f"NMSE_DDIM_rT{R_T}_T{NUM_PILOTS}_{FREQ_GHZ}GHz_rho{RHO:.3f}_pg.mat"
+        else: res_filename = f"NMSE_DDIM_rT{R_T}_T{NUM_PILOTS}_{FREQ_GHZ}GHz_rho{RHO:.3f}_fixed_eta.mat"
     res_path = os.path.join(script_dir, "test_results", "NMSE_raw_mats")
     os.makedirs(res_path, exist_ok=True)
     

@@ -1,23 +1,38 @@
 import torch
 import numpy as np
 import os
-import scipy.io
+import scipy.io 
 
 # ==========================================
 # 1. Configuration
 # ==========================================
 NUM_TEST_SAMPLES = 3000
 SNR_LEVELS = [-4, -2, 0, 2, 4, 6, 8, 10]
-RHO = 0.1034
-FREQ_GHZ = 12
-R_T = 64
+FREQ_GHZ = 38
+if FREQ_GHZ == 12: RHO = 0.1034
+elif FREQ_GHZ == 38: RHO = 0.0001
+R_T = 54
+NUM_PILOTS = 64*4
+MODE = 'modal' # 'spatial' or 'modal'
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 # Adjust to point to the newly generated dataset
-DATASET_PATH = os.path.join(SCRIPT_DIR, "data", "training_testing_dataset", f"tracking_test_nondiag_rho{RHO:.3f}_{FREQ_GHZ}GHz_{NUM_TEST_SAMPLES}samples.pt")
+if MODE == 'spatial':
+    DATASET_PATH = os.path.join(SCRIPT_DIR, "data", "training_testing_dataset", 
+                            f"tracking_test_nondiag_spatial_T{NUM_PILOTS}_rho{RHO:.3f}_{FREQ_GHZ}GHz_{NUM_TEST_SAMPLES}samples.pt")
+elif MODE == 'modal':
+    DATASET_PATH = os.path.join(SCRIPT_DIR, "data", "training_testing_dataset", 
+                            f"tracking_test_nondiag_rT{R_T}_T{NUM_PILOTS}_rho{RHO:.3f}_{FREQ_GHZ}GHz_{NUM_TEST_SAMPLES}samples.pt")
 
 OUTPUT_DIR = os.path.join(SCRIPT_DIR, "test_results", "NMSE_raw_mats")
-OUTPUT_FILE = os.path.join(OUTPUT_DIR, f"NMSE_Baseline_Kalman_Filter_{FREQ_GHZ}GHz_rho{RHO:.3f}.mat")
+if MODE == 'spatial':
+    OUTPUT_FILE = os.path.join(OUTPUT_DIR, 
+                                 f"NMSE_KF_spatial_T{NUM_PILOTS}_{FREQ_GHZ}GHz_rho{RHO:.3f}.mat")
+elif MODE == 'modal':
+    OUTPUT_FILE = os.path.join(OUTPUT_DIR, 
+                                 f"NMSE_KF_rT{R_T}_T{NUM_PILOTS}_{FREQ_GHZ}GHz_rho{RHO:.3f}.mat")
+
+EIGEN_FILE_TX = os.path.join(SCRIPT_DIR, "data", "HFSS", "eigen_result", f"8x8_UPA_{FREQ_GHZ}GHz_eigen.mat")
 
 # ==========================================
 # 2. Kalman Filter Implementation
@@ -34,15 +49,26 @@ def run_kalman_filter_baseline():
     
     config = dataset["config"]
     rho = config["rho"]
-    Q_cov = torch.diag(config["process_noise_var"]).numpy()
     
     # Convert tensors to numpy for traditional KF math
     x0_tau = dataset["x0_tau"].numpy()
     x0_tau_plus_1 = dataset["x0_tau_plus_1"].numpy()
+    # U_T_trunc = dataset["U_T_trunc"].numpy() 
+    # U_pinv = np.linalg.pinv(U_T_trunc)
+    U_T_full = scipy.io.loadmat(EIGEN_FILE_TX)['U_T_sorted']
+    U_T_trunc = U_T_full[:, :R_T]
+    U_pinv = np.linalg.pinv(U_T_trunc)
     M = dataset["M"].numpy()
     y_observations = dataset["observations"]
     
     num_pilots = config["num_pilots"]
+    sigma2_w = np.mean(np.var(dataset["x0_tau"].numpy(), axis=0)) * (1 - rho**2) #########
+    # sigma2_w = (1 - rho**2)
+    # if MODE == 'modal':
+    #     Q_cov = sigma2_w * (U_T_trunc.conj().T @ U_T_trunc)   #(1 - rho**2)
+    # elif MODE == 'spatial':
+    #     Q_cov = sigma2_w * np.eye(U_T_trunc.shape[0])   #(1 - rho**2)
+    Q_cov = sigma2_w * np.eye(U_T_trunc.shape[1])   #(1 - rho**2)
     
     # Base signal power to calculate noise variance for R matrix
     y_clean = x0_tau_plus_1 @ M.T
@@ -76,13 +102,26 @@ def run_kalman_filter_baseline():
         # Updated state estimate: x_hat = x_pred + K * v
         x_hat = x_pred + (innovation @ K.T)
         
-        # 3. Evaluate NMSE
+        # if MODE == 'modal':
+        #     # Reconstruction formula: spatial = modal @ pinv
+        #     # (3000, 38) @ (38, 64) = (3000, 64)
+        #     x0_tau_plus_1_spatial = x0_tau_plus_1 @ U_pinv 
+        #     x_hat_spatial = x_hat @ U_pinv
+            
+        #     # Use these 64-dim spatial vectors for the NMSE
+        #     mse = np.mean(np.linalg.norm(x0_tau_plus_1_spatial - x_hat_spatial, axis=1)**2)
+        #     ref = np.mean(np.linalg.norm(x0_tau_plus_1_spatial, axis=1)**2)
+        # else:
+        #     # Standard spatial NMSE
+        #     mse = np.mean(np.linalg.norm(x0_tau_plus_1 - x_hat, axis=1)**2)
+        #     ref = np.mean(np.linalg.norm(x0_tau_plus_1, axis=1)**2)
         mse = np.mean(np.linalg.norm(x0_tau_plus_1 - x_hat, axis=1)**2)
         ref = np.mean(np.linalg.norm(x0_tau_plus_1, axis=1)**2)
+
         nmse_db = 10 * np.log10(mse / ref)
-        
         nmse_results.append(nmse_db)
         print(f"  SNR {snr:2d} dB | KF Tracking NMSE: {nmse_db:6.2f} dB")
+    print(f"--- KF Tracking Complete for {MODE} MODE, T={NUM_PILOTS}, rT={R_T} ---")
         
     # 4. Save Results
     os.makedirs(OUTPUT_DIR, exist_ok=True)

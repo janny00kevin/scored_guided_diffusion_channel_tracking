@@ -2,7 +2,7 @@ import scipy.special as sp
 import numpy as np
 
 # System parameters
-f_0 = 12.45e9  # Carrier Frequency: 12.45 GHz
+f_0 = 38.75e9  # Carrier Frequency: 38.75 GHz or 12.45 GHz (mmWave or sub-THz)
 v = 15.0       # Velocity: 15 m/s (approx. 54 km/h or 33 mph)
 c = 3e8        # Speed of light in m/s
 

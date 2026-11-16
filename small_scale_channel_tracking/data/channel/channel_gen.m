@@ -5,14 +5,14 @@ addpath('TS38901');
 rng(0);
 
 % --- 1. Configuration ---
-f_c = 12.45;  % 2.0625, 28, or 38.75 GHz
+f_c = 38.75;  % 2.0625, 28, or 38.75 GHz
 nTxxy = [8 8];
 nRxxy = [1 1];
 num_samples = 1000000;
 
 % General setting for channel generation
 loc_BSs = [0; 0; 20000];
-loc_UTs = [0; 0; 0];     % set distance between BSs and UT to be around 680 m in 2D [min 35 m in 2D]
+loc_UTs = [0; 0; 1.5];     % set distance between BSs and UT to be around 680 m in 2D [min 35 m in 2D]
 ori_BSs = [1 0 0; 0 1 0; 0 0 -1];
 ori_UTs = [1 0 0; 0 1 0; 0 0 1];
 f_arr = [2 0]; % UPA n single antenna
@@ -39,5 +39,5 @@ totalTime = toc;
 fprintf('Simulation took %.2f minutes.\n', totalTime/60);
 
 filename = sprintf('channel_data_SC_%.0fGHz_%dx%dTx_%dx%dRx_%dsamples.mat', ...
-    f_c, nTxxy(1), nTxxy(2), nRxxy(1), nRxxy(2), num_samples);
+    floor(f_c), nTxxy(1), nTxxy(2), nRxxy(1), nRxxy(2), num_samples);
 save(filename,'H_samples','-v7.3');
